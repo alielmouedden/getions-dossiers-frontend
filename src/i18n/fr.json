@@ -76,5 +76,8 @@
   "allRoles": "Tous les rôles",
   "allStatuses": "Tous les statuts",
   "showing": "Affichage",
-  "of": "sur"
+  "of": "sur",
+  "export": "Exporter",
+  "exportCSV": "Exporter CSV",
+  "exportPDF": "Exporter PDF"
 }
