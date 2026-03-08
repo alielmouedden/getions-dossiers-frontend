@@ -91,10 +91,10 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={barChartConfig} className="h-[280px] w-full">
-              <BarChart data={monthlyData} margin={{ top: 5, right: 45, left: 5, bottom: 0 }}>
+              <BarChart data={monthlyData} margin={{ top: 5, right: 60, left: 5, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" reversed />
-                <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" orientation="right" width={45} tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value} />
+                <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" orientation="right" width={50} tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="files" fill="var(--color-files)" radius={[4, 4, 0, 0]} barSize={20} />
                 <Bar dataKey="transfers" fill="var(--color-transfers)" radius={[4, 4, 0, 0]} barSize={20} />
