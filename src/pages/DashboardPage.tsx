@@ -21,12 +21,12 @@ const DashboardPage = () => {
   ];
 
   const monthlyData = [
-    { month: t('jan'), files: 12, transfers: 8 },
-    { month: t('feb'), files: 19, transfers: 14 },
-    { month: t('mar'), files: 15, transfers: 11 },
-    { month: t('apr'), files: 22, transfers: 18 },
-    { month: t('may'), files: 28, transfers: 21 },
-    { month: t('jun'), files: 35, transfers: 26 },
+    { month: t('jan'), files: 3200, transfers: 1800 },
+    { month: t('feb'), files: 5900, transfers: 3400 },
+    { month: t('mar'), files: 4500, transfers: 2100 },
+    { month: t('apr'), files: 8200, transfers: 5800 },
+    { month: t('may'), files: 12800, transfers: 9100 },
+    { month: t('jun'), files: 15000, transfers: 11600 },
   ];
 
   const transferStatusData = [
