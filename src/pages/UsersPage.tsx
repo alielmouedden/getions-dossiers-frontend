@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { exportToCSV, exportToPDF } from '@/lib/export';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -110,10 +112,38 @@ const UsersPage = () => {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground">{t('userManagement')}</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addUser')}</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2"><Download className="w-4 h-4" /> {t('export')}</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => {
+                const headers = [
+                  { key: 'id', label: t('id') }, { key: 'username', label: t('username') },
+                  { key: 'firstName', label: t('firstName') }, { key: 'lastName', label: t('lastName') },
+                  { key: 'email', label: t('email') }, { key: 'role', label: t('role') }, { key: 'phone', label: t('phone') },
+                ];
+                exportToCSV(filtered as unknown as Record<string, string>[], headers, 'users');
+              }}>
+                <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const headers = [
+                  { key: 'id', label: t('id') }, { key: 'username', label: t('username') },
+                  { key: 'firstName', label: t('firstName') }, { key: 'lastName', label: t('lastName') },
+                  { key: 'email', label: t('email') }, { key: 'role', label: t('role') }, { key: 'phone', label: t('phone') },
+                ];
+                exportToPDF(filtered as unknown as Record<string, string>[], headers, 'users', t('userManagement'));
+              }}>
+                <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addUser')}</Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>{t('addUser')}</DialogTitle></DialogHeader>
             <div className="space-y-3">
@@ -149,6 +179,7 @@ const UsersPage = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Edit Dialog */}

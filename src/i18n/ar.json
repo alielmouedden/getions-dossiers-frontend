@@ -76,5 +76,8 @@
   "allRoles": "جميع الأدوار",
   "allStatuses": "جميع الحالات",
   "showing": "عرض",
-  "of": "من"
+  "of": "من",
+  "export": "تصدير",
+  "exportCSV": "تصدير CSV",
+  "exportPDF": "تصدير PDF"
 }
