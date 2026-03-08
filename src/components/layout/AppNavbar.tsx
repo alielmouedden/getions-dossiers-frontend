@@ -42,7 +42,7 @@ export const AppNavbar = ({
 
       <div className="flex items-center gap-2">
         {/* Notifications */}
-        <DropdownMenu>
+        <DropdownMenu dir={language === 'ar' ? 'rtl' : 'ltr'}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
               <Bell className="w-4 h-4" />
@@ -53,7 +53,7 @@ export const AppNavbar = ({
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 p-0" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+          <DropdownMenuContent align="end" className="w-80 p-0">
             <div className="px-4 py-3 bg-accent/50 border-b border-border">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <Bell className="w-4 h-4 text-primary" />
