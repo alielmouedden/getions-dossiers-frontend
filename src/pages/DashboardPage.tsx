@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Users, FolderOpen, ArrowRightLeft, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { Users, FolderOpen, ArrowRightLeft, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
