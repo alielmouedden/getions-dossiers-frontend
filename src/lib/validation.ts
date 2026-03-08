@@ -25,13 +25,11 @@ export const transferSchema = z.object({
   status: z.enum(['pending', 'received', 'completed']),
 });
 
-export type FormErrors<T> = Partial<Record<keyof T, string>>;
-
-export function validateForm<T extends z.ZodObject<any>>(
-  schema: T,
+export function validateForm<T extends Record<string, any>>(
+  schema: z.ZodSchema<T>,
   data: Record<string, any>,
   t: (key: string) => string
-): { success: boolean; errors: FormErrors<z.infer<T>> } {
+): { success: boolean; errors: Partial<Record<string, string>> } {
   const result = schema.safeParse(data);
   if (result.success) return { success: true, errors: {} };
 
