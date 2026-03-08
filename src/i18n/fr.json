@@ -57,5 +57,11 @@
   "userAdded": "Utilisateur ajouté avec succès",
   "fileAdded": "Dossier ajouté avec succès",
   "transferAdded": "Transfert ajouté avec succès",
-  "search": "Rechercher..."
+  "search": "Rechercher...",
+  "filterByRole": "Filtrer par rôle",
+  "filterByStatus": "Filtrer par statut",
+  "allRoles": "Tous les rôles",
+  "allStatuses": "Tous les statuts",
+  "showing": "Affichage",
+  "of": "sur"
 }

@@ -57,5 +57,11 @@
   "userAdded": "تم إضافة المستخدم بنجاح",
   "fileAdded": "تم إضافة الملف بنجاح",
   "transferAdded": "تم إضافة التحويل بنجاح",
-  "search": "بحث..."
+  "search": "بحث...",
+  "filterByRole": "تصفية حسب الدور",
+  "filterByStatus": "تصفية حسب الحالة",
+  "allRoles": "جميع الأدوار",
+  "allStatuses": "جميع الحالات",
+  "showing": "عرض",
+  "of": "من"
 }
