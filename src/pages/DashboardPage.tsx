@@ -150,7 +150,7 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={areaChartConfig} className="h-[220px] w-full">
-              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+              <AreaChart data={monthlyData} margin={{ top: 5, right: 45, left: 5, bottom: 0 }}>
                 <defs>
                   <linearGradient id="fillFiles" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--color-files)" stopOpacity={0.3} />
@@ -158,8 +158,8 @@ const DashboardPage = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" tickMargin={4} width={70} tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value} />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" reversed />
+                <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" orientation="right" width={45} tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area type="monotone" dataKey="files" stroke="var(--color-files)" fill="url(#fillFiles)" strokeWidth={2} />
               </AreaChart>
