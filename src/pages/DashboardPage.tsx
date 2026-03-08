@@ -8,7 +8,7 @@ import {
 import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { mockUsers, mockFiles, mockTransfers } from '@/data/mock';
 
 const DashboardPage = () => {
@@ -114,27 +114,25 @@ const DashboardPage = () => {
             <CardTitle className="text-lg">{t('transfersByStatus')}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <div className="h-[200px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={transferStatusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                    strokeWidth={0}
-                  >
-                    {transferStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={{ completed: { label: t('completed'), color: 'hsl(var(--success))' }, pending: { label: t('pending'), color: 'hsl(var(--warning))' }, received: { label: t('received'), color: 'hsl(var(--info))' } }} className="h-[200px] w-full">
+              <PieChart>
+                <Pie
+                  data={transferStatusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={4}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {transferStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ChartContainer>
             <div className="flex gap-4 mt-2">
               {transferStatusData.map((item) => (
                 <div key={item.name} className="flex items-center gap-1.5 text-xs">
@@ -180,27 +178,25 @@ const DashboardPage = () => {
             <CardTitle className="text-lg">{t('usersByRole')}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <div className="h-[160px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={roleData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={65}
-                    paddingAngle={4}
-                    dataKey="value"
-                    strokeWidth={0}
-                  >
-                    {roleData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={{ admin: { label: t('admin'), color: 'hsl(var(--primary))' }, employee: { label: t('employee'), color: 'hsl(var(--info))' }, consultant: { label: t('consultant'), color: 'hsl(var(--warning))' } }} className="h-[160px] w-full">
+              <PieChart>
+                <Pie
+                  data={roleData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={65}
+                  paddingAngle={4}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {roleData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ChartContainer>
             <div className="flex flex-wrap justify-center gap-3 mt-2">
               {roleData.map((item) => (
                 <div key={item.name} className="flex items-center gap-1.5 text-xs">
