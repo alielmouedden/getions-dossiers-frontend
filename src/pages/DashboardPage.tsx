@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Users, FolderOpen, ArrowRightLeft, TrendingUp, TrendingDown } from 'lucide-react';
+import { Users, FolderOpen, ArrowRightLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,10 +15,9 @@ const DashboardPage = () => {
   const { t } = useTranslation();
 
   const statCards = [
-    { key: 'totalUsers', icon: Users, value: mockUsers.length, change: '+12%', up: true, color: 'text-info' },
-    { key: 'totalFiles', icon: FolderOpen, value: mockFiles.length, change: '+8%', up: true, color: 'text-success' },
-    { key: 'transferRequests', icon: ArrowRightLeft, value: mockTransfers.length, change: '+23%', up: true, color: 'text-warning' },
-    
+    { key: 'totalUsers', icon: Users, value: mockUsers.length, color: 'text-info' },
+    { key: 'totalFiles', icon: FolderOpen, value: mockFiles.length, color: 'text-success' },
+    { key: 'transferRequests', icon: ArrowRightLeft, value: mockTransfers.length, color: 'text-warning' },
   ];
 
   const monthlyData = [
@@ -77,10 +76,6 @@ const DashboardPage = () => {
               <div className="flex-1">
                 <p className="text-2xl font-bold text-foreground">{card.value}</p>
                 <p className="text-sm text-muted-foreground">{t(card.key)}</p>
-              </div>
-              <div className={`flex items-center gap-1 text-xs font-medium ${card.up ? 'text-success' : 'text-destructive'}`}>
-                {card.up ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                {card.change}
               </div>
             </CardContent>
           </Card>
