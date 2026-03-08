@@ -53,7 +53,7 @@ export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
         </div>
 
         {/* Menu items */}
-        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-4 px-2 space-y-1 overflow-hidden">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
