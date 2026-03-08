@@ -21,12 +21,12 @@ const DashboardPage = () => {
   ];
 
   const monthlyData = [
-    { month: t('jan'), files: 12, transfers: 8 },
-    { month: t('feb'), files: 19, transfers: 14 },
-    { month: t('mar'), files: 15, transfers: 11 },
-    { month: t('apr'), files: 22, transfers: 18 },
-    { month: t('may'), files: 28, transfers: 21 },
-    { month: t('jun'), files: 35, transfers: 26 },
+    { month: t('jan'), files: 3200, transfers: 1800 },
+    { month: t('feb'), files: 5900, transfers: 3400 },
+    { month: t('mar'), files: 4500, transfers: 2100 },
+    { month: t('apr'), files: 8200, transfers: 5800 },
+    { month: t('may'), files: 12800, transfers: 9100 },
+    { month: t('jun'), files: 15000, transfers: 11600 },
   ];
 
   const transferStatusData = [
@@ -91,10 +91,10 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={barChartConfig} className="h-[280px] w-full">
-              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 20, bottom: 0 }}>
+              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={16} width={60} />
+                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={8} width={70} tickFormatter={(value) => value.toLocaleString()} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="files" fill="var(--color-files)" radius={[4, 4, 0, 0]} barSize={20} />
                 <Bar dataKey="transfers" fill="var(--color-transfers)" radius={[4, 4, 0, 0]} barSize={20} />
@@ -150,7 +150,7 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={areaChartConfig} className="h-[220px] w-full">
-              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: 20, bottom: 0 }}>
+              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
                 <defs>
                   <linearGradient id="fillFiles" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--color-files)" stopOpacity={0.3} />
@@ -159,7 +159,7 @@ const DashboardPage = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={16} width={60} />
+                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={8} width={70} tickFormatter={(value) => value.toLocaleString()} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area type="monotone" dataKey="files" stroke="var(--color-files)" fill="url(#fillFiles)" strokeWidth={2} />
               </AreaChart>
