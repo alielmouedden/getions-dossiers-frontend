@@ -79,5 +79,9 @@
   "of": "sur",
   "export": "Exporter",
   "exportCSV": "Exporter CSV",
-  "exportPDF": "Exporter PDF"
+  "exportPDF": "Exporter PDF",
+  "required": "Ce champ est requis",
+  "invalidEmail": "Adresse email invalide",
+  "minLength3": "Minimum 3 caractères",
+  "minLength6": "Minimum 6 caractères"
 }
