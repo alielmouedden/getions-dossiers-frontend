@@ -149,7 +149,7 @@ const DashboardPage = () => {
             <CardTitle className="text-lg">{t('filesByMonth')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={areaChartConfig} className="h-[220px] w-full">
+            <ChartContainer config={areaChartConfig} className="h-[220px] w-full [&_.recharts-surface]:overflow-visible [&_.recharts-wrapper]:overflow-visible">
               <AreaChart data={monthlyData} margin={{ top: 5, right: 60, left: 5, bottom: 0 }}>
                 <defs>
                   <linearGradient id="fillFiles" x1="0" y1="0" x2="0" y2="1">
