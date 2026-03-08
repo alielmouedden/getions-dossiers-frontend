@@ -178,24 +178,23 @@ const DashboardPage = () => {
             <CardTitle className="text-lg">{t('usersByRole')}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <div className="h-[160px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={roleData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={65}
-                    paddingAngle={4}
-                    dataKey="value"
-                    strokeWidth={0}
-                  >
-                    {roleData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartContainer config={{ admin: { label: t('admin'), color: 'hsl(var(--primary))' }, employee: { label: t('employee'), color: 'hsl(var(--info))' }, consultant: { label: t('consultant'), color: 'hsl(var(--warning))' } }} className="h-[160px] w-full">
+              <PieChart>
+                <Pie
+                  data={roleData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={65}
+                  paddingAngle={4}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {roleData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
