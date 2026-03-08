@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Ban, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -26,10 +30,14 @@ const UsersPage = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', username: '', password: '', role: 'employee' as UserRole, phone: '' });
+  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', username: '', role: 'employee' as UserRole, phone: '' });
 
   const filtered = useMemo(() => {
     let result = users;
@@ -59,6 +67,33 @@ const UsersPage = () => {
     toast({ title: t('userAdded') });
   };
 
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
+    setEditForm({ firstName: user.firstName, lastName: user.lastName, email: user.email, username: user.username, role: user.role, phone: user.phone });
+    setEditOpen(true);
+  };
+
+  const handleEditSave = () => {
+    if (!selectedUser) return;
+    setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...editForm } : u));
+    setEditOpen(false);
+    setSelectedUser(null);
+    toast({ title: t('userUpdated') });
+  };
+
+  const handleDeleteClick = (user: User) => {
+    setSelectedUser(user);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!selectedUser) return;
+    setUsers(users.filter(u => u.id !== selectedUser.id));
+    setDeleteOpen(false);
+    setSelectedUser(null);
+    toast({ title: t('userDeleted') });
+  };
+
   const roleBadge = (role: string) => {
     const styles: Record<string, string> = {
       admin: 'bg-destructive/10 text-destructive border-destructive/20',
@@ -68,7 +103,6 @@ const UsersPage = () => {
     return <Badge variant="outline" className={styles[role]}>{t(role)}</Badge>;
   };
 
-  // Reset page when filters change
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
   const handleRoleFilter = (val: string) => { setRoleFilter(val); setPage(1); };
 
@@ -117,6 +151,57 @@ const UsersPage = () => {
         </Dialog>
       </div>
 
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>{t('editUser')}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>{t('firstName')}</Label>
+                <Input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('lastName')}</Label>
+                <Input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-1"><Label>{t('email')}</Label><Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} /></div>
+            <div className="space-y-1"><Label>{t('username')}</Label><Input value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} /></div>
+            <div className="space-y-1">
+              <Label>{t('role')}</Label>
+              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v as UserRole })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">{t('admin')}</SelectItem>
+                  <SelectItem value="employee">{t('employee')}</SelectItem>
+                  <SelectItem value="consultant">{t('consultant')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1"><Label>{t('phone')}</Label><Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} /></div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleEditSave} className="flex-1">{t('save')}</Button>
+              <Button variant="outline" onClick={() => setEditOpen(false)} className="flex-1">{t('cancel')}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('confirmDeleteUser')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('delete')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -163,8 +248,8 @@ const UsersPage = () => {
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"><Ban className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(user)}><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteClick(user)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -174,7 +259,6 @@ const UsersPage = () => {
         </CardContent>
       </Card>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{t('showing')} {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} {t('of')} {filtered.length}</p>
