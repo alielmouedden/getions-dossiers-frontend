@@ -91,7 +91,7 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={barChartConfig} className="h-[280px] w-full">
-              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
                 <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
@@ -150,7 +150,7 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={areaChartConfig} className="h-[220px] w-full">
-              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="fillFiles" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--color-files)" stopOpacity={0.3} />
