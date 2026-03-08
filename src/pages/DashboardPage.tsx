@@ -18,7 +18,7 @@ const DashboardPage = () => {
     { key: 'totalUsers', icon: Users, value: mockUsers.length, change: '+12%', up: true, color: 'text-info' },
     { key: 'totalFiles', icon: FolderOpen, value: mockFiles.length, change: '+8%', up: true, color: 'text-success' },
     { key: 'transferRequests', icon: ArrowRightLeft, value: mockTransfers.length, change: '+23%', up: true, color: 'text-warning' },
-    { key: 'deleteRequests', icon: Trash2, value: 1, change: '-5%', up: false, color: 'text-destructive' },
+    
   ];
 
   const monthlyData = [
