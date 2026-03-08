@@ -47,39 +47,55 @@ export const AppNavbar = ({
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
               <Bell className="w-4 h-4" />
               {notifications.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                   {notifications.length}
                 </span>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-72">
-            <div className="px-3 py-2 text-sm font-semibold text-foreground border-b border-border">
-              {t('notifications')}
+          <DropdownMenuContent align="end" className="w-80 p-0" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="px-4 py-3 bg-accent/50 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Bell className="w-4 h-4 text-primary" />
+                {t('notifications')}
+              </h3>
             </div>
-            {notifications.length > 0 ? (
-              notifications.map((notif) => (
-                <DropdownMenuItem key={notif.id} className="flex items-start gap-3 py-3 cursor-pointer">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                    notif.type === 'transfer' ? 'bg-info/10' : 'bg-success/10'
-                  }`}>
-                    {notif.type === 'transfer' ? (
-                      <FileText className="w-4 h-4 text-info" />
-                    ) : (
-                      <CheckCircle className="w-4 h-4 text-success" />
-                    )}
+            <div className="max-h-80 overflow-y-auto">
+              {notifications.length > 0 ? (
+                notifications.map((notif, index) => (
+                  <div 
+                    key={notif.id} 
+                    className={`flex items-start gap-3 p-4 hover:bg-accent/30 cursor-pointer transition-colors ${
+                      index !== notifications.length - 1 ? 'border-b border-border/50' : ''
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                      notif.type === 'transfer' 
+                        ? 'bg-info/15 ring-2 ring-info/20' 
+                        : 'bg-success/15 ring-2 ring-success/20'
+                    }`}>
+                      {notif.type === 'transfer' ? (
+                        <FileText className="w-5 h-5 text-info" />
+                      ) : (
+                        <CheckCircle className="w-5 h-5 text-success" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <p className="text-sm font-medium text-foreground leading-relaxed">{notif.message}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary/60"></span>
+                        {notif.time}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground">{notif.message}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{notif.time}</p>
-                  </div>
-                </DropdownMenuItem>
-              ))
-            ) : (
-              <div className="px-3 py-4 text-sm text-muted-foreground text-center">
-                {t('noNotifications')}
-              </div>
-            )}
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center">
+                  <Bell className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">{t('noNotifications')}</p>
+                </div>
+              )}
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
 
