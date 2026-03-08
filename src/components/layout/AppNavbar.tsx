@@ -28,7 +28,7 @@ export const AppNavbar = ({
   const { t } = useTranslation();
 
   return (
-    <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 shrink-0">
+    <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 shrink-0 sticky top-0 z-50">
       <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="text-muted-foreground hover:text-foreground">
         <Menu className="w-5 h-5" />
       </Button>
