@@ -185,6 +185,7 @@ const TransfersPage = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Edit Dialog */}

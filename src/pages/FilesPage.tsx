@@ -171,6 +171,7 @@ const FilesPage = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Edit Dialog */}

@@ -179,6 +179,7 @@ const UsersPage = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Edit Dialog */}
