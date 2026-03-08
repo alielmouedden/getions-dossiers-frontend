@@ -104,10 +104,36 @@ const FilesPage = () => {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground">{t('fileManagement')}</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addFile')}</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2"><Download className="w-4 h-4" /> {t('export')}</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => {
+                const headers = [
+                  { key: 'fileNumber', label: t('fileNumber') }, { key: 'folderNumber', label: t('folderNumber') },
+                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationDate') },
+                ];
+                exportToCSV(filtered as unknown as Record<string, string>[], headers, 'files');
+              }}>
+                <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const headers = [
+                  { key: 'fileNumber', label: t('fileNumber') }, { key: 'folderNumber', label: t('folderNumber') },
+                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationDate') },
+                ];
+                exportToPDF(filtered as unknown as Record<string, string>[], headers, 'files', t('fileManagement'));
+              }}>
+                <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addFile')}</Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>{t('addFile')}</DialogTitle></DialogHeader>
             <div className="space-y-3">
