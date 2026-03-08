@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -26,10 +30,14 @@ const TransfersPage = () => {
   const { toast } = useToast();
   const [transfers, setTransfers] = useState<Transfer[]>(mockTransfers);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'pending' as TransferStatus });
+  const [editForm, setEditForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'pending' as TransferStatus });
 
   const filtered = useMemo(() => {
     let result = transfers;
@@ -59,6 +67,33 @@ const TransfersPage = () => {
     setOpen(false);
     setForm({ fromUser: '', toUser: '', fileId: '', status: 'pending' });
     toast({ title: t('transferAdded') });
+  };
+
+  const handleEdit = (transfer: Transfer) => {
+    setSelectedTransfer(transfer);
+    setEditForm({ fromUser: transfer.fromUser, toUser: transfer.toUser, fileId: transfer.fileId, status: transfer.status });
+    setEditOpen(true);
+  };
+
+  const handleEditSave = () => {
+    if (!selectedTransfer) return;
+    setTransfers(transfers.map(tr => tr.id === selectedTransfer.id ? { ...tr, ...editForm } : tr));
+    setEditOpen(false);
+    setSelectedTransfer(null);
+    toast({ title: t('transferUpdated') });
+  };
+
+  const handleDeleteClick = (transfer: Transfer) => {
+    setSelectedTransfer(transfer);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!selectedTransfer) return;
+    setTransfers(transfers.filter(tr => tr.id !== selectedTransfer.id));
+    setDeleteOpen(false);
+    setSelectedTransfer(null);
+    toast({ title: t('transferDeleted') });
   };
 
   const statusBadge = (status: string) => {
@@ -122,6 +157,65 @@ const TransfersPage = () => {
         </Dialog>
       </div>
 
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>{t('editTransfer')}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label>{t('selectFile')}</Label>
+              <Select value={editForm.fileId} onValueChange={(v) => setEditForm({ ...editForm, fileId: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{mockFiles.map((f) => (<SelectItem key={f.id} value={f.fileNumber}>{f.fileNumber}</SelectItem>))}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('fromUser')}</Label>
+              <Select value={editForm.fromUser} onValueChange={(v) => setEditForm({ ...editForm, fromUser: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('toUser')}</Label>
+              <Select value={editForm.toUser} onValueChange={(v) => setEditForm({ ...editForm, toUser: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('status')}</Label>
+              <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v as TransferStatus })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">{t('pending')}</SelectItem>
+                  <SelectItem value="received">{t('received')}</SelectItem>
+                  <SelectItem value="completed">{t('completed')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleEditSave} className="flex-1">{t('save')}</Button>
+              <Button variant="outline" onClick={() => setEditOpen(false)} className="flex-1">{t('cancel')}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('confirmDeleteTransfer')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('delete')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -150,11 +244,12 @@ const TransfersPage = () => {
                 <TableHead>{t('file')}</TableHead>
                 <TableHead>{t('status')}</TableHead>
                 <TableHead>{t('date')}</TableHead>
+                <TableHead>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginated.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">{t('noData')}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{t('noData')}</TableCell></TableRow>
               ) : paginated.map((tr) => (
                 <TableRow key={tr.id}>
                   <TableCell className="font-medium">#{tr.id}</TableCell>
@@ -163,6 +258,12 @@ const TransfersPage = () => {
                   <TableCell>{tr.fileId}</TableCell>
                   <TableCell>{statusBadge(tr.status)}</TableCell>
                   <TableCell>{tr.date}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(tr)}><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteClick(tr)}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

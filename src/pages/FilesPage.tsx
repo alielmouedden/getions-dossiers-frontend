@@ -12,6 +12,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
@@ -32,10 +36,15 @@ const FilesPage = () => {
   const { toast } = useToast();
   const [files, setFiles] = useState<CaseFile[]>(mockFiles);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<CaseFile | null>(null);
   const [date, setDate] = useState<Date>();
+  const [editDate, setEditDate] = useState<Date>();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ fileNumber: '', folderNumber: '', createdBy: '' });
+  const [editForm, setEditForm] = useState({ fileNumber: '', folderNumber: '', createdBy: '' });
 
   const filtered = useMemo(() => {
     if (!search) return files;
@@ -59,6 +68,34 @@ const FilesPage = () => {
     setForm({ fileNumber: '', folderNumber: '', createdBy: '' });
     setDate(undefined);
     toast({ title: t('fileAdded') });
+  };
+
+  const handleEdit = (file: CaseFile) => {
+    setSelectedFile(file);
+    setEditForm({ fileNumber: file.fileNumber, folderNumber: file.folderNumber, createdBy: file.createdBy });
+    setEditDate(file.creationDate ? new Date(file.creationDate) : undefined);
+    setEditOpen(true);
+  };
+
+  const handleEditSave = () => {
+    if (!selectedFile) return;
+    setFiles(files.map(f => f.id === selectedFile.id ? { ...f, ...editForm, creationDate: editDate ? format(editDate, 'yyyy-MM-dd') : f.creationDate } : f));
+    setEditOpen(false);
+    setSelectedFile(null);
+    toast({ title: t('fileUpdated') });
+  };
+
+  const handleDeleteClick = (file: CaseFile) => {
+    setSelectedFile(file);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!selectedFile) return;
+    setFiles(files.filter(f => f.id !== selectedFile.id));
+    setDeleteOpen(false);
+    setSelectedFile(null);
+    toast({ title: t('fileDeleted') });
   };
 
   return (
@@ -108,6 +145,60 @@ const FilesPage = () => {
         </Dialog>
       </div>
 
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>{t('editFile')}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1"><Label>{t('fileNumber')}</Label><Input value={editForm.fileNumber} onChange={(e) => setEditForm({ ...editForm, fileNumber: e.target.value })} /></div>
+            <div className="space-y-1"><Label>{t('folderNumber')}</Label><Input value={editForm.folderNumber} onChange={(e) => setEditForm({ ...editForm, folderNumber: e.target.value })} /></div>
+            <div className="space-y-1">
+              <Label>{t('createdBy')}</Label>
+              <Select value={editForm.createdBy} onValueChange={(v) => setEditForm({ ...editForm, createdBy: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {mockUsers.map((u) => (
+                    <SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('creationDate')}</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-start font-normal", !editDate && "text-muted-foreground")}>
+                    <CalendarIcon className="me-2 h-4 w-4" />
+                    {editDate ? format(editDate, 'PPP') : t('creationDate')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={editDate} onSelect={setEditDate} initialFocus className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleEditSave} className="flex-1">{t('save')}</Button>
+              <Button variant="outline" onClick={() => setEditOpen(false)} className="flex-1">{t('cancel')}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('confirmDeleteFile')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('delete')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Search */}
       <div className="relative max-w-md">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -137,8 +228,8 @@ const FilesPage = () => {
                   <TableCell>{file.creationDate}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(file)}><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteClick(file)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
