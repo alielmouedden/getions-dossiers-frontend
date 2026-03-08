@@ -114,27 +114,25 @@ const DashboardPage = () => {
             <CardTitle className="text-lg">{t('transfersByStatus')}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <div className="h-[200px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={transferStatusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                    strokeWidth={0}
-                  >
-                    {transferStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <ChartContainer config={{ completed: { label: t('completed'), color: 'hsl(var(--success))' }, pending: { label: t('pending'), color: 'hsl(var(--warning))' }, received: { label: t('received'), color: 'hsl(var(--info))' } }} className="h-[200px] w-full">
+              <PieChart>
+                <Pie
+                  data={transferStatusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={4}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {transferStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ChartContainer>
             <div className="flex gap-4 mt-2">
               {transferStatusData.map((item) => (
                 <div key={item.name} className="flex items-center gap-1.5 text-xs">
