@@ -15,10 +15,10 @@ const DashboardPage = () => {
   const { t } = useTranslation();
 
   const statCards = [
-    { key: 'totalUsers', icon: Users, value: mockUsers.length, change: '+12%', up: true, color: 'text-info' },
-    { key: 'totalFiles', icon: FolderOpen, value: mockFiles.length, change: '+8%', up: true, color: 'text-success' },
-    { key: 'transferRequests', icon: ArrowRightLeft, value: mockTransfers.length, change: '+23%', up: true, color: 'text-warning' },
-    
+    { key: 'totalUsers', icon: Users, value: mockUsers.length, color: 'text-info' },
+    { key: 'totalFiles', icon: FolderOpen, value: mockFiles.length, color: 'text-success' },
+    { key: 'transferRequests', icon: ArrowRightLeft, value: mockTransfers.length, color: 'text-warning' },
+  ];
   ];
 
   const monthlyData = [
