@@ -90,7 +90,7 @@ const DashboardPage = () => {
             <CardTitle className="text-lg">{t('monthlyActivity')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={barChartConfig} className="h-[280px] w-full">
+            <ChartContainer config={barChartConfig} className="h-[280px] w-full [&_.recharts-surface]:overflow-visible [&_.recharts-wrapper]:overflow-visible">
               <BarChart data={monthlyData} margin={{ top: 5, right: 60, left: 5, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" reversed />
