@@ -128,4 +128,11 @@
     font-weight: 600;
     letter-spacing: -0.02em;
   }
+
+  /* Force clean sans-serif numerals on chart axes and ticks */
+  .recharts-cartesian-axis-tick text,
+  .recharts-text,
+  [data-chart] text {
+    font-family: 'Inter', 'Outfit', system-ui, sans-serif !important;
+  }
 }
