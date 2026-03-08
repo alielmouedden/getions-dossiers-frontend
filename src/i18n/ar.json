@@ -99,5 +99,9 @@
   "may": "ماي",
   "jun": "يونيو",
   "overview": "نظرة عامة",
-  "analytics": "التحليلات"
+  "analytics": "التحليلات",
+  "notifications": "الإشعارات",
+  "fileTransferredToYou": "تمت إحالة ملف إليكم",
+  "transferReceived": "تم استلام الإحالة",
+  "noNotifications": "لا توجد إشعارات"
 }
