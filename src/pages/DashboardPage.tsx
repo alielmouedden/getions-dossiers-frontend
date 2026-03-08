@@ -195,9 +195,8 @@ const DashboardPage = () => {
                   ))}
                 </Pie>
                 <ChartTooltip content={<ChartTooltipContent />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+              </PieChart>
+            </ChartContainer>
             <div className="flex flex-wrap justify-center gap-3 mt-2">
               {roleData.map((item) => (
                 <div key={item.name} className="flex items-center gap-1.5 text-xs">
