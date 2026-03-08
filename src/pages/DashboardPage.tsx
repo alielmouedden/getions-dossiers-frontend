@@ -8,7 +8,7 @@ import {
 import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { mockUsers, mockFiles, mockTransfers } from '@/data/mock';
 
 const DashboardPage = () => {
