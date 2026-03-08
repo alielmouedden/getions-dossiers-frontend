@@ -1,26 +1,55 @@
 import { useTranslation } from 'react-i18next';
-import { Users, FolderOpen, ArrowRightLeft, Trash2 } from 'lucide-react';
+import { Users, FolderOpen, ArrowRightLeft, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import {
+  ChartContainer, ChartTooltip, ChartTooltipContent,
+} from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { mockUsers, mockFiles, mockTransfers } from '@/data/mock';
-
-const statCards = [
-  { key: 'totalUsers', icon: Users, value: 5, color: 'text-info' },
-  { key: 'totalFiles', icon: FolderOpen, value: 5, color: 'text-success' },
-  { key: 'transferRequests', icon: ArrowRightLeft, value: 4, color: 'text-warning' },
-  { key: 'deleteRequests', icon: Trash2, value: 1, color: 'text-destructive' },
-];
 
 const DashboardPage = () => {
   const { t } = useTranslation();
+
+  const statCards = [
+    { key: 'totalUsers', icon: Users, value: mockUsers.length, change: '+12%', up: true, color: 'text-info' },
+    { key: 'totalFiles', icon: FolderOpen, value: mockFiles.length, change: '+8%', up: true, color: 'text-success' },
+    { key: 'transferRequests', icon: ArrowRightLeft, value: mockTransfers.length, change: '+23%', up: true, color: 'text-warning' },
+    { key: 'deleteRequests', icon: Trash2, value: 1, change: '-5%', up: false, color: 'text-destructive' },
+  ];
+
+  const monthlyData = [
+    { month: t('jan'), files: 12, transfers: 8 },
+    { month: t('feb'), files: 19, transfers: 14 },
+    { month: t('mar'), files: 15, transfers: 11 },
+    { month: t('apr'), files: 22, transfers: 18 },
+    { month: t('may'), files: 28, transfers: 21 },
+    { month: t('jun'), files: 35, transfers: 26 },
+  ];
+
+  const transferStatusData = [
+    { name: t('completed'), value: mockTransfers.filter(t => t.status === 'completed').length || 1, fill: 'hsl(var(--success))' },
+    { name: t('pending'), value: mockTransfers.filter(t => t.status === 'pending').length || 2, fill: 'hsl(var(--warning))' },
+    { name: t('received'), value: mockTransfers.filter(t => t.status === 'received').length || 1, fill: 'hsl(var(--info))' },
+  ];
+
+  const roleData = [
+    { name: t('admin'), value: mockUsers.filter(u => u.role === 'admin').length, fill: 'hsl(var(--primary))' },
+    { name: t('employee'), value: mockUsers.filter(u => u.role === 'employee').length, fill: 'hsl(var(--info))' },
+    { name: t('consultant'), value: mockUsers.filter(u => u.role === 'consultant').length, fill: 'hsl(var(--warning))' },
+  ];
+
+  const barChartConfig = {
+    files: { label: t('filesCreated'), color: 'hsl(var(--primary))' },
+    transfers: { label: t('transfersMade'), color: 'hsl(var(--info))' },
+  };
+
+  const areaChartConfig = {
+    files: { label: t('filesCreated'), color: 'hsl(var(--success))' },
+  };
 
   const statusBadge = (status: string) => {
     const variants: Record<string, string> = {
@@ -45,13 +74,144 @@ const DashboardPage = () => {
               <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center shrink-0">
                 <card.icon className={`w-6 h-6 ${card.color}`} />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-2xl font-bold text-foreground">{card.value}</p>
                 <p className="text-sm text-muted-foreground">{t(card.key)}</p>
+              </div>
+              <div className={`flex items-center gap-1 text-xs font-medium ${card.up ? 'text-success' : 'text-destructive'}`}>
+                {card.up ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                {card.change}
               </div>
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Monthly Activity Bar Chart */}
+        <Card className="lg:col-span-2 border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{t('monthlyActivity')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={barChartConfig} className="h-[280px] w-full">
+              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="files" fill="var(--color-files)" radius={[4, 4, 0, 0]} barSize={20} />
+                <Bar dataKey="transfers" fill="var(--color-transfers)" radius={[4, 4, 0, 0]} barSize={20} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Transfer Status Pie */}
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{t('transfersByStatus')}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <div className="h-[200px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={transferStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={4}
+                    dataKey="value"
+                    strokeWidth={0}
+                  >
+                    {transferStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex gap-4 mt-2">
+              {transferStatusData.map((item) => (
+                <div key={item.name} className="flex items-center gap-1.5 text-xs">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                  <span className="text-muted-foreground">{item.name}</span>
+                  <span className="font-semibold text-foreground">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Second Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Files Area Chart */}
+        <Card className="lg:col-span-2 border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{t('filesByMonth')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={areaChartConfig} className="h-[220px] w-full">
+              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="fillFiles" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-files)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--color-files)" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area type="monotone" dataKey="files" stroke="var(--color-files)" fill="url(#fillFiles)" strokeWidth={2} />
+              </AreaChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Users by Role Pie */}
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">{t('usersByRole')}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <div className="h-[160px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={roleData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={65}
+                    paddingAngle={4}
+                    dataKey="value"
+                    strokeWidth={0}
+                  >
+                    {roleData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3 mt-2">
+              {roleData.map((item) => (
+                <div key={item.name} className="flex items-center gap-1.5 text-xs">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                  <span className="text-muted-foreground">{item.name}</span>
+                  <span className="font-semibold text-foreground">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Files */}
