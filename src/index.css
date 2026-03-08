@@ -107,12 +107,15 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Lexend', sans-serif;
   }
 
+  [dir="rtl"] body,
   [dir="rtl"] {
     font-family: 'Amiri', serif;
   }
 
+  [dir="ltr"] body,
   [dir="ltr"] {
     font-family: 'Lexend', sans-serif;
   }
