@@ -91,7 +91,7 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={barChartConfig} className="h-[280px] w-full">
-              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
                 <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={8} />
