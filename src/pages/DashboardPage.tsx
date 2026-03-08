@@ -19,7 +19,6 @@ const DashboardPage = () => {
     { key: 'totalFiles', icon: FolderOpen, value: mockFiles.length, color: 'text-success' },
     { key: 'transferRequests', icon: ArrowRightLeft, value: mockTransfers.length, color: 'text-warning' },
   ];
-  ];
 
   const monthlyData = [
     { month: t('jan'), files: 12, transfers: 8 },
