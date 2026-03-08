@@ -99,5 +99,9 @@
   "may": "Mai",
   "jun": "Juin",
   "overview": "Vue d'ensemble",
-  "analytics": "Analytique"
+  "analytics": "Analytique",
+  "notifications": "Notifications",
+  "fileTransferredToYou": "Un dossier vous a été transféré",
+  "transferReceived": "Le transfert a été reçu",
+  "noNotifications": "Aucune notification"
 }
