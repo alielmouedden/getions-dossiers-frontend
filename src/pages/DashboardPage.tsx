@@ -91,10 +91,10 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={barChartConfig} className="h-[280px] w-full">
-              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
+              <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={8} width={70} tickFormatter={(value) => value.toLocaleString()} />
+                <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" tickMargin={4} width={55} tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="files" fill="var(--color-files)" radius={[4, 4, 0, 0]} barSize={20} />
                 <Bar dataKey="transfers" fill="var(--color-transfers)" radius={[4, 4, 0, 0]} barSize={20} />
@@ -150,7 +150,7 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={areaChartConfig} className="h-[220px] w-full">
-              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: 5, bottom: 0 }}>
+              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="fillFiles" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--color-files)" stopOpacity={0.3} />
@@ -159,7 +159,7 @@ const DashboardPage = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={8} width={70} tickFormatter={(value) => value.toLocaleString()} />
+                <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" tickMargin={4} width={55} tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area type="monotone" dataKey="files" stroke="var(--color-files)" fill="url(#fillFiles)" strokeWidth={2} />
               </AreaChart>
