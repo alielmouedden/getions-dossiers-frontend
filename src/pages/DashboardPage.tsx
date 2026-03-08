@@ -94,7 +94,7 @@ const DashboardPage = () => {
               <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={12} width={40} />
+                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={16} width={60} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="files" fill="var(--color-files)" radius={[4, 4, 0, 0]} barSize={20} />
                 <Bar dataKey="transfers" fill="var(--color-transfers)" radius={[4, 4, 0, 0]} barSize={20} />
@@ -159,7 +159,7 @@ const DashboardPage = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
-                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={12} width={40} />
+                <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickMargin={16} width={60} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area type="monotone" dataKey="files" stroke="var(--color-files)" fill="url(#fillFiles)" strokeWidth={2} />
               </AreaChart>
