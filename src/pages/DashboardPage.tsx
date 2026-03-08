@@ -78,10 +78,6 @@ const DashboardPage = () => {
                 <p className="text-2xl font-bold text-foreground">{card.value}</p>
                 <p className="text-sm text-muted-foreground">{t(card.key)}</p>
               </div>
-              <div className={`flex items-center gap-1 text-xs font-medium ${card.up ? 'text-success' : 'text-destructive'}`}>
-                {card.up ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                {card.change}
-              </div>
             </CardContent>
           </Card>
         ))}
