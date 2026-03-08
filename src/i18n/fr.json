@@ -83,5 +83,21 @@
   "required": "Ce champ est requis",
   "invalidEmail": "Adresse email invalide",
   "minLength3": "Minimum 3 caractères",
-  "minLength6": "Minimum 6 caractères"
+  "minLength6": "Minimum 6 caractères",
+  "monthlyActivity": "Activité mensuelle",
+  "transfersByStatus": "Transferts par statut",
+  "filesByMonth": "Dossiers par mois",
+  "usersByRole": "Utilisateurs par rôle",
+  "filesCreated": "Dossiers créés",
+  "transfersMade": "Transferts effectués",
+  "activeUsers": "Utilisateurs actifs",
+  "inactiveUsers": "Utilisateurs inactifs",
+  "jan": "Jan",
+  "feb": "Fév",
+  "mar": "Mar",
+  "apr": "Avr",
+  "may": "Mai",
+  "jun": "Juin",
+  "overview": "Vue d'ensemble",
+  "analytics": "Analytique"
 }
