@@ -79,5 +79,9 @@
   "of": "من",
   "export": "تصدير",
   "exportCSV": "تصدير CSV",
-  "exportPDF": "تصدير PDF"
+  "exportPDF": "تصدير PDF",
+  "required": "هذا الحقل مطلوب",
+  "invalidEmail": "البريد الإلكتروني غير صالح",
+  "minLength3": "يجب أن يكون 3 أحرف على الأقل",
+  "minLength6": "يجب أن يكون 6 أحرف على الأقل"
 }

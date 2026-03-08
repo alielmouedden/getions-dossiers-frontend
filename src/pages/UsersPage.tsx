@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportToCSV, exportToPDF } from '@/lib/export';
+import { userAddSchema, userEditSchema, validateForm } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,8 @@ const UsersPage = () => {
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', username: '', password: '', role: 'employee' as UserRole, phone: '' });
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', username: '', role: 'employee' as UserRole, phone: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
   const filtered = useMemo(() => {
     let result = users;
@@ -62,24 +65,31 @@ const UsersPage = () => {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleAdd = () => {
+    const { success, errors: validationErrors } = validateForm(userAddSchema, form, t);
+    if (!success) { setErrors(validationErrors); return; }
     const newUser: User = { id: String(users.length + 1), ...form, active: true };
     setUsers([...users, newUser]);
     setOpen(false);
     setForm({ firstName: '', lastName: '', email: '', username: '', password: '', role: 'employee', phone: '' });
+    setErrors({});
     toast({ title: t('userAdded') });
   };
 
   const handleEdit = (user: User) => {
     setSelectedUser(user);
     setEditForm({ firstName: user.firstName, lastName: user.lastName, email: user.email, username: user.username, role: user.role, phone: user.phone });
+    setEditErrors({});
     setEditOpen(true);
   };
 
   const handleEditSave = () => {
     if (!selectedUser) return;
+    const { success, errors: validationErrors } = validateForm(userEditSchema, editForm, t);
+    if (!success) { setEditErrors(validationErrors); return; }
     setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...editForm } : u));
     setEditOpen(false);
     setSelectedUser(null);
+    setEditErrors({});
     toast({ title: t('userUpdated') });
   };
 
@@ -107,6 +117,8 @@ const UsersPage = () => {
 
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
   const handleRoleFilter = (val: string) => { setRoleFilter(val); setPage(1); };
+
+  const FieldError = ({ error }: { error?: string }) => error ? <p className="text-xs text-destructive mt-1">{error}</p> : null;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -140,65 +152,93 @@ const UsersPage = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
             <DialogTrigger asChild>
               <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addUser')}</Button>
             </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>{t('addUser')}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label>{t('firstName')}</Label>
-                  <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+            <DialogContent className="max-w-md">
+              <DialogHeader><DialogTitle>{t('addUser')}</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>{t('firstName')}</Label>
+                    <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} className={errors.firstName ? 'border-destructive' : ''} />
+                    <FieldError error={errors.firstName} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('lastName')}</Label>
+                    <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className={errors.lastName ? 'border-destructive' : ''} />
+                    <FieldError error={errors.lastName} />
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>{t('lastName')}</Label>
-                  <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+                  <Label>{t('email')}</Label>
+                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={errors.email ? 'border-destructive' : ''} />
+                  <FieldError error={errors.email} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('username')}</Label>
+                  <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} className={errors.username ? 'border-destructive' : ''} />
+                  <FieldError error={errors.username} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('password')}</Label>
+                  <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={errors.password ? 'border-destructive' : ''} />
+                  <FieldError error={errors.password} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('role')}</Label>
+                  <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
+                    <SelectTrigger><SelectValue placeholder={t('selectRole')} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">{t('admin')}</SelectItem>
+                      <SelectItem value="employee">{t('employee')}</SelectItem>
+                      <SelectItem value="consultant">{t('consultant')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('phone')}</Label>
+                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={errors.phone ? 'border-destructive' : ''} />
+                  <FieldError error={errors.phone} />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
+                  <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">{t('cancel')}</Button>
                 </div>
               </div>
-              <div className="space-y-1"><Label>{t('email')}</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-              <div className="space-y-1"><Label>{t('username')}</Label><Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></div>
-              <div className="space-y-1"><Label>{t('password')}</Label><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></div>
-              <div className="space-y-1">
-                <Label>{t('role')}</Label>
-                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
-                  <SelectTrigger><SelectValue placeholder={t('selectRole')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">{t('admin')}</SelectItem>
-                    <SelectItem value="employee">{t('employee')}</SelectItem>
-                    <SelectItem value="consultant">{t('consultant')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1"><Label>{t('phone')}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-              <div className="flex gap-2 pt-2">
-                <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
-                <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">{t('cancel')}</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditErrors({}); }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{t('editUser')}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>{t('firstName')}</Label>
-                <Input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} />
+                <Input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} className={editErrors.firstName ? 'border-destructive' : ''} />
+                <FieldError error={editErrors.firstName} />
               </div>
               <div className="space-y-1">
                 <Label>{t('lastName')}</Label>
-                <Input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} />
+                <Input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} className={editErrors.lastName ? 'border-destructive' : ''} />
+                <FieldError error={editErrors.lastName} />
               </div>
             </div>
-            <div className="space-y-1"><Label>{t('email')}</Label><Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} /></div>
-            <div className="space-y-1"><Label>{t('username')}</Label><Input value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} /></div>
+            <div className="space-y-1">
+              <Label>{t('email')}</Label>
+              <Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className={editErrors.email ? 'border-destructive' : ''} />
+              <FieldError error={editErrors.email} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('username')}</Label>
+              <Input value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} className={editErrors.username ? 'border-destructive' : ''} />
+              <FieldError error={editErrors.username} />
+            </div>
             <div className="space-y-1">
               <Label>{t('role')}</Label>
               <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v as UserRole })}>
@@ -210,7 +250,11 @@ const UsersPage = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1"><Label>{t('phone')}</Label><Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} /></div>
+            <div className="space-y-1">
+              <Label>{t('phone')}</Label>
+              <Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className={editErrors.phone ? 'border-destructive' : ''} />
+              <FieldError error={editErrors.phone} />
+            </div>
             <div className="flex gap-2 pt-2">
               <Button onClick={handleEditSave} className="flex-1">{t('save')}</Button>
               <Button variant="outline" onClick={() => setEditOpen(false)} className="flex-1">{t('cancel')}</Button>

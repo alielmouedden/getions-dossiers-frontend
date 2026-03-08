@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportToCSV, exportToPDF } from '@/lib/export';
+import { transferSchema, validateForm } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,8 @@ const TransfersPage = () => {
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'pending' as TransferStatus });
   const [editForm, setEditForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'pending' as TransferStatus });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
   const filtered = useMemo(() => {
     let result = transfers;
@@ -64,24 +67,31 @@ const TransfersPage = () => {
   const handleStatusFilter = (val: string) => { setStatusFilter(val); setPage(1); };
 
   const handleAdd = () => {
+    const { success, errors: validationErrors } = validateForm(transferSchema, form, t);
+    if (!success) { setErrors(validationErrors); return; }
     const newTransfer: Transfer = { id: String(transfers.length + 1), ...form, date: new Date().toISOString().split('T')[0] };
     setTransfers([...transfers, newTransfer]);
     setOpen(false);
     setForm({ fromUser: '', toUser: '', fileId: '', status: 'pending' });
+    setErrors({});
     toast({ title: t('transferAdded') });
   };
 
   const handleEdit = (transfer: Transfer) => {
     setSelectedTransfer(transfer);
     setEditForm({ fromUser: transfer.fromUser, toUser: transfer.toUser, fileId: transfer.fileId, status: transfer.status });
+    setEditErrors({});
     setEditOpen(true);
   };
 
   const handleEditSave = () => {
     if (!selectedTransfer) return;
+    const { success, errors: validationErrors } = validateForm(transferSchema, editForm, t);
+    if (!success) { setEditErrors(validationErrors); return; }
     setTransfers(transfers.map(tr => tr.id === selectedTransfer.id ? { ...tr, ...editForm } : tr));
     setEditOpen(false);
     setSelectedTransfer(null);
+    setEditErrors({});
     toast({ title: t('transferUpdated') });
   };
 
@@ -106,6 +116,8 @@ const TransfersPage = () => {
     };
     return <Badge variant="outline" className={styles[status]}>{t(status)}</Badge>;
   };
+
+  const FieldError = ({ error }: { error?: string }) => error ? <p className="text-xs text-destructive mt-1">{error}</p> : null;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -139,80 +151,86 @@ const TransfersPage = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
             <DialogTrigger asChild>
               <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addTransfer')}</Button>
             </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>{t('addTransfer')}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <Label>{t('selectFile')}</Label>
-                <Select value={form.fileId} onValueChange={(v) => setForm({ ...form, fileId: v })}>
-                  <SelectTrigger><SelectValue placeholder={t('selectFile')} /></SelectTrigger>
-                  <SelectContent>{mockFiles.map((f) => (<SelectItem key={f.id} value={f.fileNumber}>{f.fileNumber}</SelectItem>))}</SelectContent>
-                </Select>
+            <DialogContent className="max-w-md">
+              <DialogHeader><DialogTitle>{t('addTransfer')}</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label>{t('selectFile')}</Label>
+                  <Select value={form.fileId} onValueChange={(v) => setForm({ ...form, fileId: v })}>
+                    <SelectTrigger className={errors.fileId ? 'border-destructive' : ''}><SelectValue placeholder={t('selectFile')} /></SelectTrigger>
+                    <SelectContent>{mockFiles.map((f) => (<SelectItem key={f.id} value={f.fileNumber}>{f.fileNumber}</SelectItem>))}</SelectContent>
+                  </Select>
+                  <FieldError error={errors.fileId} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('fromUser')}</Label>
+                  <Select value={form.fromUser} onValueChange={(v) => setForm({ ...form, fromUser: v })}>
+                    <SelectTrigger className={errors.fromUser ? 'border-destructive' : ''}><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
+                    <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
+                  </Select>
+                  <FieldError error={errors.fromUser} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('toUser')}</Label>
+                  <Select value={form.toUser} onValueChange={(v) => setForm({ ...form, toUser: v })}>
+                    <SelectTrigger className={errors.toUser ? 'border-destructive' : ''}><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
+                    <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
+                  </Select>
+                  <FieldError error={errors.toUser} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('status')}</Label>
+                  <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as TransferStatus })}>
+                    <SelectTrigger><SelectValue placeholder={t('selectStatus')} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">{t('pending')}</SelectItem>
+                      <SelectItem value="received">{t('received')}</SelectItem>
+                      <SelectItem value="completed">{t('completed')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
+                  <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">{t('cancel')}</Button>
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label>{t('fromUser')}</Label>
-                <Select value={form.fromUser} onValueChange={(v) => setForm({ ...form, fromUser: v })}>
-                  <SelectTrigger><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
-                  <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>{t('toUser')}</Label>
-                <Select value={form.toUser} onValueChange={(v) => setForm({ ...form, toUser: v })}>
-                  <SelectTrigger><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
-                  <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label>{t('status')}</Label>
-                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as TransferStatus })}>
-                  <SelectTrigger><SelectValue placeholder={t('selectStatus')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">{t('pending')}</SelectItem>
-                    <SelectItem value="received">{t('received')}</SelectItem>
-                    <SelectItem value="completed">{t('completed')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
-                <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">{t('cancel')}</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditErrors({}); }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{t('editTransfer')}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
               <Label>{t('selectFile')}</Label>
               <Select value={editForm.fileId} onValueChange={(v) => setEditForm({ ...editForm, fileId: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className={editErrors.fileId ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
                 <SelectContent>{mockFiles.map((f) => (<SelectItem key={f.id} value={f.fileNumber}>{f.fileNumber}</SelectItem>))}</SelectContent>
               </Select>
+              <FieldError error={editErrors.fileId} />
             </div>
             <div className="space-y-1">
               <Label>{t('fromUser')}</Label>
               <Select value={editForm.fromUser} onValueChange={(v) => setEditForm({ ...editForm, fromUser: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className={editErrors.fromUser ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
                 <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
               </Select>
+              <FieldError error={editErrors.fromUser} />
             </div>
             <div className="space-y-1">
               <Label>{t('toUser')}</Label>
               <Select value={editForm.toUser} onValueChange={(v) => setEditForm({ ...editForm, toUser: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className={editErrors.toUser ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
                 <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
               </Select>
+              <FieldError error={editErrors.toUser} />
             </div>
             <div className="space-y-1">
               <Label>{t('status')}</Label>

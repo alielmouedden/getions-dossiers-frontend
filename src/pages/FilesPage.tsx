@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportToCSV, exportToPDF } from '@/lib/export';
+import { fileSchema, validateForm } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,8 @@ const FilesPage = () => {
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ fileNumber: '', folderNumber: '', createdBy: '' });
   const [editForm, setEditForm] = useState({ fileNumber: '', folderNumber: '', createdBy: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
   const filtered = useMemo(() => {
     if (!search) return files;
@@ -64,11 +67,14 @@ const FilesPage = () => {
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
 
   const handleAdd = () => {
+    const { success, errors: validationErrors } = validateForm(fileSchema, form, t);
+    if (!success) { setErrors(validationErrors); return; }
     const newFile: CaseFile = { id: String(files.length + 1), ...form, creationDate: date ? format(date, 'yyyy-MM-dd') : '' };
     setFiles([...files, newFile]);
     setOpen(false);
     setForm({ fileNumber: '', folderNumber: '', createdBy: '' });
     setDate(undefined);
+    setErrors({});
     toast({ title: t('fileAdded') });
   };
 
@@ -76,14 +82,18 @@ const FilesPage = () => {
     setSelectedFile(file);
     setEditForm({ fileNumber: file.fileNumber, folderNumber: file.folderNumber, createdBy: file.createdBy });
     setEditDate(file.creationDate ? new Date(file.creationDate) : undefined);
+    setEditErrors({});
     setEditOpen(true);
   };
 
   const handleEditSave = () => {
     if (!selectedFile) return;
+    const { success, errors: validationErrors } = validateForm(fileSchema, editForm, t);
+    if (!success) { setEditErrors(validationErrors); return; }
     setFiles(files.map(f => f.id === selectedFile.id ? { ...f, ...editForm, creationDate: editDate ? format(editDate, 'yyyy-MM-dd') : f.creationDate } : f));
     setEditOpen(false);
     setSelectedFile(null);
+    setEditErrors({});
     toast({ title: t('fileUpdated') });
   };
 
@@ -99,6 +109,8 @@ const FilesPage = () => {
     setSelectedFile(null);
     toast({ title: t('fileDeleted') });
   };
+
+  const FieldError = ({ error }: { error?: string }) => error ? <p className="text-xs text-destructive mt-1">{error}</p> : null;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -130,67 +142,85 @@ const FilesPage = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
             <DialogTrigger asChild>
               <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addFile')}</Button>
             </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>{t('addFile')}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div className="space-y-1"><Label>{t('fileNumber')}</Label><Input value={form.fileNumber} onChange={(e) => setForm({ ...form, fileNumber: e.target.value })} /></div>
-              <div className="space-y-1"><Label>{t('folderNumber')}</Label><Input value={form.folderNumber} onChange={(e) => setForm({ ...form, folderNumber: e.target.value })} /></div>
-              <div className="space-y-1">
-                <Label>{t('createdBy')}</Label>
-                <Select value={form.createdBy} onValueChange={(v) => setForm({ ...form, createdBy: v })}>
-                  <SelectTrigger><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
-                  <SelectContent>
-                    {mockUsers.map((u) => (
-                      <SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <DialogContent className="max-w-md">
+              <DialogHeader><DialogTitle>{t('addFile')}</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label>{t('fileNumber')}</Label>
+                  <Input value={form.fileNumber} onChange={(e) => setForm({ ...form, fileNumber: e.target.value })} className={errors.fileNumber ? 'border-destructive' : ''} />
+                  <FieldError error={errors.fileNumber} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('folderNumber')}</Label>
+                  <Input value={form.folderNumber} onChange={(e) => setForm({ ...form, folderNumber: e.target.value })} className={errors.folderNumber ? 'border-destructive' : ''} />
+                  <FieldError error={errors.folderNumber} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('createdBy')}</Label>
+                  <Select value={form.createdBy} onValueChange={(v) => setForm({ ...form, createdBy: v })}>
+                    <SelectTrigger className={errors.createdBy ? 'border-destructive' : ''}><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
+                    <SelectContent>
+                      {mockUsers.map((u) => (
+                        <SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FieldError error={errors.createdBy} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('creationDate')}</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-start font-normal", !date && "text-muted-foreground")}>
+                        <CalendarIcon className="me-2 h-4 w-4" />
+                        {date ? format(date, 'PPP') : t('creationDate')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={date} onSelect={setDate} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
+                  <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">{t('cancel')}</Button>
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label>{t('creationDate')}</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-start font-normal", !date && "text-muted-foreground")}>
-                      <CalendarIcon className="me-2 h-4 w-4" />
-                      {date ? format(date, 'PPP') : t('creationDate')}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus className="p-3 pointer-events-auto" />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
-                <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">{t('cancel')}</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditErrors({}); }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{t('editFile')}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div className="space-y-1"><Label>{t('fileNumber')}</Label><Input value={editForm.fileNumber} onChange={(e) => setEditForm({ ...editForm, fileNumber: e.target.value })} /></div>
-            <div className="space-y-1"><Label>{t('folderNumber')}</Label><Input value={editForm.folderNumber} onChange={(e) => setEditForm({ ...editForm, folderNumber: e.target.value })} /></div>
+            <div className="space-y-1">
+              <Label>{t('fileNumber')}</Label>
+              <Input value={editForm.fileNumber} onChange={(e) => setEditForm({ ...editForm, fileNumber: e.target.value })} className={editErrors.fileNumber ? 'border-destructive' : ''} />
+              <FieldError error={editErrors.fileNumber} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('folderNumber')}</Label>
+              <Input value={editForm.folderNumber} onChange={(e) => setEditForm({ ...editForm, folderNumber: e.target.value })} className={editErrors.folderNumber ? 'border-destructive' : ''} />
+              <FieldError error={editErrors.folderNumber} />
+            </div>
             <div className="space-y-1">
               <Label>{t('createdBy')}</Label>
               <Select value={editForm.createdBy} onValueChange={(v) => setEditForm({ ...editForm, createdBy: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className={editErrors.createdBy ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {mockUsers.map((u) => (
                     <SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <FieldError error={editErrors.createdBy} />
             </div>
             <div className="space-y-1">
               <Label>{t('creationDate')}</Label>
