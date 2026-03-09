@@ -120,5 +120,8 @@
   "notifications": "الإشعارات",
   "fileTransferredToYou": "تمت إحالة ملف إليكم",
   "transferReceived": "تم استلام الإحالة",
-  "noNotifications": "لا توجد إشعارات"
+  "noNotifications": "لا توجد إشعارات",
+  "myTransfersLog": "سجل إحالاتي",
+  "sentTransfers": "الإحالات المرسلة",
+  "receivedTransfers": "الإحالات المستلمة"
 }

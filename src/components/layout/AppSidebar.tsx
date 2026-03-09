@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, X, Scale } from 'lucide-react';
+import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, ClipboardList, X, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AppSidebarProps {
@@ -14,6 +14,7 @@ const menuItems = [
   { key: 'userManagement', icon: Users, path: '/users' },
   { key: 'fileManagement', icon: FolderOpen, path: '/files' },
   { key: 'transferManagement', icon: ArrowRightLeft, path: '/transfers' },
+  { key: 'myTransfersLog', icon: ClipboardList, path: '/my-transfers' },
 ];
 
 export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {

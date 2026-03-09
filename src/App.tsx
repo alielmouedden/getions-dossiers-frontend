@@ -10,6 +10,7 @@ import DashboardPage from "./pages/DashboardPage";
 import UsersPage from "./pages/UsersPage";
 import FilesPage from "./pages/FilesPage";
 import TransfersPage from "./pages/TransfersPage";
+import MyTransfersPage from "./pages/MyTransfersPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/users" element={<UsersPage />} />
             <Route path="/files" element={<FilesPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
+            <Route path="/my-transfers" element={<MyTransfersPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
