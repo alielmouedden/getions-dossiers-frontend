@@ -21,12 +21,6 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover, PopoverContent, PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { mockFiles, mockUsers } from '@/data/mock';
@@ -42,8 +36,8 @@ const FilesPage = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<CaseFile | null>(null);
-  const [date, setDate] = useState<Date>();
-  const [editDate, setEditDate] = useState<Date>();
+  const [year, setYear] = useState('');
+  const [editYear, setEditYear] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ fileNumber: '', folderNumber: '', createdBy: '' });
@@ -69,11 +63,11 @@ const FilesPage = () => {
   const handleAdd = () => {
     const { success, errors: validationErrors } = validateForm(fileSchema, form, t);
     if (!success) { setErrors(validationErrors); return; }
-    const newFile: CaseFile = { id: String(files.length + 1), ...form, creationDate: date ? format(date, 'yyyy-MM-dd') : '' };
+    const newFile: CaseFile = { id: String(files.length + 1), ...form, creationDate: year };
     setFiles([...files, newFile]);
     setOpen(false);
     setForm({ fileNumber: '', folderNumber: '', createdBy: '' });
-    setDate(undefined);
+    setYear('');
     setErrors({});
     toast({ title: t('fileAdded') });
   };
@@ -81,7 +75,7 @@ const FilesPage = () => {
   const handleEdit = (file: CaseFile) => {
     setSelectedFile(file);
     setEditForm({ fileNumber: file.fileNumber, folderNumber: file.folderNumber, createdBy: file.createdBy });
-    setEditDate(file.creationDate ? new Date(file.creationDate) : undefined);
+    setEditYear(file.creationDate ? file.creationDate.substring(0, 4) : '');
     setEditErrors({});
     setEditOpen(true);
   };
@@ -90,7 +84,7 @@ const FilesPage = () => {
     if (!selectedFile) return;
     const { success, errors: validationErrors } = validateForm(fileSchema, editForm, t);
     if (!success) { setEditErrors(validationErrors); return; }
-    setFiles(files.map(f => f.id === selectedFile.id ? { ...f, ...editForm, creationDate: editDate ? format(editDate, 'yyyy-MM-dd') : f.creationDate } : f));
+    setFiles(files.map(f => f.id === selectedFile.id ? { ...f, ...editForm, creationDate: editYear || f.creationDate } : f));
     setEditOpen(false);
     setSelectedFile(null);
     setEditErrors({});
@@ -125,7 +119,7 @@ const FilesPage = () => {
               <DropdownMenuItem onClick={() => {
                 const headers = [
                   { key: 'fileNumber', label: t('fileNumber') }, { key: 'folderNumber', label: t('folderNumber') },
-                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationDate') },
+                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationYear') },
                 ];
                 exportToCSV(filtered as unknown as Record<string, string>[], headers, 'files');
               }}>
@@ -134,7 +128,7 @@ const FilesPage = () => {
               <DropdownMenuItem onClick={() => {
                 const headers = [
                   { key: 'fileNumber', label: t('fileNumber') }, { key: 'folderNumber', label: t('folderNumber') },
-                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationDate') },
+                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationYear') },
                 ];
                 exportToPDF(filtered as unknown as Record<string, string>[], headers, 'files', t('fileManagement'));
               }}>
@@ -172,18 +166,15 @@ const FilesPage = () => {
                   <FieldError error={errors.createdBy} />
                 </div>
                 <div className="space-y-1">
-                  <Label>{t('creationDate')}</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-start font-normal", !date && "text-muted-foreground")}>
-                        <CalendarIcon className="me-2 h-4 w-4" />
-                        {date ? format(date, 'PPP') : t('creationDate')}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={date} onSelect={setDate} initialFocus className="p-3 pointer-events-auto" />
-                    </PopoverContent>
-                  </Popover>
+                  <Label>{t('creationYear')}</Label>
+                  <Input
+                    type="number"
+                    min="1900"
+                    max="2099"
+                    placeholder={t('creationYear')}
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
+                  />
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
@@ -223,18 +214,15 @@ const FilesPage = () => {
               <FieldError error={editErrors.createdBy} />
             </div>
             <div className="space-y-1">
-              <Label>{t('creationDate')}</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-start font-normal", !editDate && "text-muted-foreground")}>
-                    <CalendarIcon className="me-2 h-4 w-4" />
-                    {editDate ? format(editDate, 'PPP') : t('creationDate')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={editDate} onSelect={setEditDate} initialFocus className="p-3 pointer-events-auto" />
-                </PopoverContent>
-              </Popover>
+              <Label>{t('creationYear')}</Label>
+              <Input
+                type="number"
+                min="1900"
+                max="2099"
+                placeholder={t('creationYear')}
+                value={editYear}
+                onChange={(e) => setEditYear(e.target.value)}
+              />
             </div>
             <div className="flex gap-2 pt-2">
               <Button onClick={handleEditSave} className="flex-1">{t('save')}</Button>
@@ -272,7 +260,7 @@ const FilesPage = () => {
                 <TableHead>{t('fileNumber')}</TableHead>
                 <TableHead>{t('folderNumber')}</TableHead>
                 <TableHead>{t('createdBy')}</TableHead>
-                <TableHead>{t('creationDate')}</TableHead>
+                <TableHead>{t('creationYear')}</TableHead>
                 <TableHead>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
