@@ -12,7 +12,7 @@ import {
 import { Home } from 'lucide-react';
 
 const routeTranslations: Record<string, string> = {
-  '/': 'dashboard',
+  '/dashboard': 'dashboard',
   '/users': 'userManagement',
   '/files': 'fileManagement',
   '/transfers': 'transferManagement',
@@ -23,7 +23,7 @@ export const AppBreadcrumb = () => {
   const location = useLocation();
   const pathSegments = location.pathname.split('/').filter(Boolean);
 
-  const isHome = location.pathname === '/';
+  const isHome = location.pathname === '/dashboard';
 
   return (
     <Breadcrumb className="mb-4">
@@ -36,7 +36,7 @@ export const AppBreadcrumb = () => {
             </BreadcrumbPage>
           ) : (
             <BreadcrumbLink asChild>
-              <NavLink to="/" className="flex items-center gap-1.5 hover:text-foreground">
+              <NavLink to="/dashboard" className="flex items-center gap-1.5 hover:text-foreground">
                 <Home className="w-4 h-4" />
                 {t('dashboard')}
               </NavLink>
