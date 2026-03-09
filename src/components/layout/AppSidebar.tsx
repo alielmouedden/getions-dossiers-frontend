@@ -61,7 +61,7 @@ export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
 
         {/* Menu items */}
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-hidden">
-          {menuItems.map((item) => {
+          {visibleItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <Link
