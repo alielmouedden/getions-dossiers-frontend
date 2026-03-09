@@ -51,6 +51,7 @@
   "folderNumber": "Numéro de classeur",
   "createdBy": "Créé par",
   "creationDate": "Date de création",
+  "creationYear": "Année de création",
   "transferId": "ID transfert",
   "fromUser": "De l'utilisateur",
   "toUser": "À l'utilisateur",

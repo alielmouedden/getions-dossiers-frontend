@@ -51,6 +51,7 @@
   "folderNumber": "رقم المجلد",
   "createdBy": "أنشئ بواسطة",
   "creationDate": "تاريخ الإنشاء",
+  "creationYear": "سنة الإنشاء",
   "transferId": "معرف التحويل",
   "fromUser": "من المستخدم",
   "toUser": "إلى المستخدم",
