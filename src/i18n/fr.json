@@ -143,5 +143,8 @@
   "logType_create": "Création",
   "logType_update": "Modification",
   "logType_delete": "Suppression",
-  "logType_transfer": "Transfert"
+  "logType_transfer": "Transfert",
+  "unauthorized": "Accès non autorisé",
+  "unauthorizedDesc": "Vous n'avez pas les permissions nécessaires pour accéder à cette page. Contactez l'administrateur si vous pensez qu'il s'agit d'une erreur.",
+  "backToDashboard": "Retour au tableau de bord"
 }
