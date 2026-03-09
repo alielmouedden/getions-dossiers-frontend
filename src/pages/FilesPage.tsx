@@ -36,8 +36,8 @@ const FilesPage = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<CaseFile | null>(null);
-  const [date, setDate] = useState<Date>();
-  const [editDate, setEditDate] = useState<Date>();
+  const [year, setYear] = useState('');
+  const [editYear, setEditYear] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [form, setForm] = useState({ fileNumber: '', folderNumber: '', createdBy: '' });
