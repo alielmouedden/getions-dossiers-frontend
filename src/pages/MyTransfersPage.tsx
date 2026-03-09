@@ -92,30 +92,25 @@ const MyTransfersPage = () => {
           <TabsTrigger value="sent">{t('sentTransfers')}</TabsTrigger>
           <TabsTrigger value="received">{t('receivedTransfers')}</TabsTrigger>
         </TabsList>
-
-        <div className="flex flex-col sm:flex-row gap-3 mt-4">
-          <div className="relative flex-1">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder={t('search')} value={search} onChange={(e) => handleSearch(e.target.value)} className="ps-9" />
-          </div>
-          <Select value={statusFilter} onValueChange={handleStatusFilter}>
-            <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder={t('filterByStatus')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('allStatuses')}</SelectItem>
-              <SelectItem value="pending">{t('pending')}</SelectItem>
-              <SelectItem value="received">{t('received')}</SelectItem>
-              <SelectItem value="completed">{t('completed')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <TabsContent value="sent" className="mt-4">
-          <TransferTable paginated={paginated} statusBadge={statusBadge} t={t} tab="sent" />
-        </TabsContent>
-        <TabsContent value="received" className="mt-4">
-          <TransferTable paginated={paginated} statusBadge={statusBadge} t={t} tab="received" />
-        </TabsContent>
       </Tabs>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder={t('search')} value={search} onChange={(e) => handleSearch(e.target.value)} className="ps-9" />
+        </div>
+        <Select value={statusFilter} onValueChange={handleStatusFilter}>
+          <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder={t('filterByStatus')} /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('allStatuses')}</SelectItem>
+            <SelectItem value="pending">{t('pending')}</SelectItem>
+            <SelectItem value="received">{t('received')}</SelectItem>
+            <SelectItem value="completed">{t('completed')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <TransferTable paginated={paginated} statusBadge={statusBadge} t={t} tab={tab} />
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
