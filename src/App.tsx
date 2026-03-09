@@ -33,6 +33,7 @@ const App = () => (
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/my-transfers" element={<MyTransfersPage />} />
             <Route path="/refer-file" element={<ReferFilePage />} />
+            <Route path="/system-logs" element={<SystemLogsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

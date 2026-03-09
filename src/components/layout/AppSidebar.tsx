@@ -16,6 +16,7 @@ const menuItems = [
   { key: 'transferManagement', icon: ArrowRightLeft, path: '/transfers' },
   { key: 'myTransfersLog', icon: ClipboardList, path: '/my-transfers' },
   { key: 'referFile', icon: Send, path: '/refer-file' },
+  { key: 'systemLogs', icon: ScrollText, path: '/system-logs' },
 ];
 
 export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {

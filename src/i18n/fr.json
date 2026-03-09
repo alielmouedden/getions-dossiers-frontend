@@ -129,5 +129,19 @@
   "newFileReferral": "Nouveau transfert de dossier",
   "selectOption": "Sélectionner une option",
   "pendingReceipt": "En attente de réception",
-  "sendReferral": "Envoyer le transfert"
+  "sendReferral": "Envoyer le transfert",
+  "systemLogs": "Journal du système",
+  "logUser": "Utilisateur",
+  "logAction": "Action",
+  "logTarget": "Cible",
+  "logDetails": "Détails",
+  "logTimestamp": "Date et heure",
+  "filterByType": "Filtrer par type",
+  "allTypes": "Tous les types",
+  "logType_login": "Connexion",
+  "logType_logout": "Déconnexion",
+  "logType_create": "Création",
+  "logType_update": "Modification",
+  "logType_delete": "Suppression",
+  "logType_transfer": "Transfert"
 }
