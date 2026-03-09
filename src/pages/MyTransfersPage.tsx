@@ -139,11 +139,11 @@ const TransferTable = ({ paginated, statusBadge, t, tab }: { paginated: Transfer
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-left">{t('transferId')}</TableHead>
-            <TableHead className="text-left">{tab === 'sent' ? t('toUser') : t('fromUser')}</TableHead>
-            <TableHead className="text-left">{t('file')}</TableHead>
-            <TableHead className="text-left">{t('status')}</TableHead>
-            <TableHead className="text-left">{t('date')}</TableHead>
+            <TableHead className="text-start">{t('transferId')}</TableHead>
+            <TableHead className="text-start">{tab === 'sent' ? t('toUser') : t('fromUser')}</TableHead>
+            <TableHead className="text-start">{t('file')}</TableHead>
+            <TableHead className="text-start">{t('status')}</TableHead>
+            <TableHead className="text-start">{t('date')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -151,11 +151,11 @@ const TransferTable = ({ paginated, statusBadge, t, tab }: { paginated: Transfer
             <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">{t('noData')}</TableCell></TableRow>
           ) : paginated.map((tr) => (
             <TableRow key={tr.id}>
-              <TableCell className="font-medium text-left">#{tr.id}</TableCell>
-              <TableCell className="text-left">{tab === 'sent' ? tr.toUser : tr.fromUser}</TableCell>
-              <TableCell className="text-left">{tr.fileId}</TableCell>
-              <TableCell className="text-left">{statusBadge(tr.status)}</TableCell>
-              <TableCell className="text-left">{tr.date}</TableCell>
+              <TableCell className="font-medium text-start">#{tr.id}</TableCell>
+              <TableCell className="text-start">{tab === 'sent' ? tr.toUser : tr.fromUser}</TableCell>
+              <TableCell className="text-start">{tr.fileId}</TableCell>
+              <TableCell className="text-start">{statusBadge(tr.status)}</TableCell>
+              <TableCell className="text-start">{tr.date}</TableCell>
             </TableRow>
           ))}
         </TableBody>
