@@ -8,7 +8,7 @@ const UnauthorizedPage = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center gap-6 p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center text-center gap-6 p-8 bg-background">
       <div className="rounded-full bg-destructive/10 p-6">
         <ShieldX className="h-16 w-16 text-destructive" />
       </div>
