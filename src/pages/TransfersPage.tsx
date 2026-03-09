@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { mockTransfers, mockUsers, mockFiles } from '@/data/mock';
 import { Transfer, TransferStatus } from '@/types';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 4;
 
 const TransfersPage = () => {
   const { t } = useTranslation();
