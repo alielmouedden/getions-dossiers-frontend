@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { mockUsers } from '@/data/mock';
 import { User, UserRole } from '@/types';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 4;
 
 const UsersPage = () => {
   const { t } = useTranslation();

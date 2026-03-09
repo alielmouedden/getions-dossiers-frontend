@@ -38,7 +38,7 @@ const mockLogs: SystemLog[] = [
   { id: '15', user: 'أحمد محمدي', action: 'logout', target: '-', details: 'تسجيل خروج', timestamp: '2024-05-10 16:00:00', type: 'logout' },
 ];
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 4;
 
 const SystemLogsPage = () => {
   const { t } = useTranslation();

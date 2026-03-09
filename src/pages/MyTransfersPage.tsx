@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { mockTransfers } from '@/data/mock';
 import { Transfer } from '@/types';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 4;
 const CURRENT_USER = 'أحمد محمدي';
 
 const MyTransfersPage = () => {
