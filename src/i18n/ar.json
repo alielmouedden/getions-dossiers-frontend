@@ -129,5 +129,19 @@
   "newFileReferral": "إحالة ملف جديد",
   "selectOption": "اختر خياراً",
   "pendingReceipt": "قيد الإستلام",
-  "sendReferral": "إرسال الإحالة"
+  "sendReferral": "إرسال الإحالة",
+  "systemLogs": "سجل النظام",
+  "logUser": "المستخدم",
+  "logAction": "الإجراء",
+  "logTarget": "الهدف",
+  "logDetails": "التفاصيل",
+  "logTimestamp": "التاريخ والوقت",
+  "filterByType": "تصفية حسب النوع",
+  "allTypes": "جميع الأنواع",
+  "logType_login": "تسجيل دخول",
+  "logType_logout": "تسجيل خروج",
+  "logType_create": "إنشاء",
+  "logType_update": "تعديل",
+  "logType_delete": "حذف",
+  "logType_transfer": "إحالة"
 }
