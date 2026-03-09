@@ -28,6 +28,7 @@ export const AppNavbar = ({
   language,
 }: AppNavbarProps) => {
   const { t } = useTranslation();
+  const { role } = useAuth();
 
   // Mock notifications
   const notifications = [
