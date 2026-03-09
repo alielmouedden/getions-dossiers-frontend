@@ -6,14 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LoginPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setRole, setUsername: setAuthUsername } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'employee'>('admin');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -22,8 +26,10 @@ const LoginPage = () => {
     setLoading(true);
     setTimeout(() => {
       if (username && password) {
+        setRole(selectedRole);
+        setAuthUsername(username);
         toast({ title: t('welcome'), description: t('loginBtn') });
-        navigate('/');
+        navigate('/dashboard');
       }
       setLoading(false);
     }, 800);
@@ -76,6 +82,16 @@ const LoginPage = () => {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{t('role')}</Label>
+                <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as 'admin' | 'employee')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">{t('admin')}</SelectItem>
+                    <SelectItem value="employee">{t('employee')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? t('loading') : t('loginBtn')}

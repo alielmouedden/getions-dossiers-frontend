@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Menu, Sun, Moon, Globe, LogOut, User, Bell, FileText, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ export const AppNavbar = ({
   language,
 }: AppNavbarProps) => {
   const { t } = useTranslation();
+  const { role } = useAuth();
 
   // Mock notifications
   const notifications = [
@@ -117,7 +119,7 @@ export const AppNavbar = ({
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="w-4 h-4 text-primary" />
               </div>
-              <span className="hidden md:inline text-sm">{t('admin')}</span>
+              <span className="hidden md:inline text-sm">{t(role)}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
