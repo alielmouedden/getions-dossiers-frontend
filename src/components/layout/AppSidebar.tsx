@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, X, Scale } from 'lucide-react';
+import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, ClipboardList, X, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AppSidebarProps {
