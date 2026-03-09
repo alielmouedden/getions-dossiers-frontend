@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AppSidebar } from './AppSidebar';
 import { AppNavbar } from './AppNavbar';
+import { AppBreadcrumb } from './AppBreadcrumb';
 
 const MainLayout = () => {
   const { i18n } = useTranslation();
@@ -46,6 +47,7 @@ const MainLayout = () => {
           language={i18n.language}
         />
         <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <AppBreadcrumb />
           <Outlet />
         </main>
       </div>
