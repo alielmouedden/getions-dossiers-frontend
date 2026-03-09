@@ -11,6 +11,7 @@ import UsersPage from "./pages/UsersPage";
 import FilesPage from "./pages/FilesPage";
 import TransfersPage from "./pages/TransfersPage";
 import MyTransfersPage from "./pages/MyTransfersPage";
+import ReferFilePage from "./pages/ReferFilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
