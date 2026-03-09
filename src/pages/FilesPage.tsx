@@ -63,11 +63,11 @@ const FilesPage = () => {
   const handleAdd = () => {
     const { success, errors: validationErrors } = validateForm(fileSchema, form, t);
     if (!success) { setErrors(validationErrors); return; }
-    const newFile: CaseFile = { id: String(files.length + 1), ...form, creationDate: date ? format(date, 'yyyy-MM-dd') : '' };
+    const newFile: CaseFile = { id: String(files.length + 1), ...form, creationDate: year };
     setFiles([...files, newFile]);
     setOpen(false);
     setForm({ fileNumber: '', folderNumber: '', createdBy: '' });
-    setDate(undefined);
+    setYear('');
     setErrors({});
     toast({ title: t('fileAdded') });
   };
