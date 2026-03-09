@@ -143,5 +143,8 @@
   "logType_create": "إنشاء",
   "logType_update": "تعديل",
   "logType_delete": "حذف",
-  "logType_transfer": "إحالة"
+  "logType_transfer": "إحالة",
+  "unauthorized": "غير مصرح بالوصول",
+  "unauthorizedDesc": "ليس لديك الصلاحيات اللازمة للوصول إلى هذه الصفحة. تواصل مع المسؤول إذا كنت تعتقد أن هذا خطأ.",
+  "backToDashboard": "العودة إلى لوحة التحكم"
 }
