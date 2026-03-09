@@ -120,5 +120,8 @@
   "notifications": "Notifications",
   "fileTransferredToYou": "Un dossier vous a été transféré",
   "transferReceived": "Le transfert a été reçu",
-  "noNotifications": "Aucune notification"
+  "noNotifications": "Aucune notification",
+  "myTransfersLog": "Mon journal de transferts",
+  "sentTransfers": "Transferts envoyés",
+  "receivedTransfers": "Transferts reçus"
 }
