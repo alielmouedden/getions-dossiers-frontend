@@ -139,11 +139,11 @@ const TransferTable = ({ paginated, statusBadge, t, tab }: { paginated: Transfer
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-start">{t('transferId')}</TableHead>
-            <TableHead className="text-start">{tab === 'sent' ? t('toUser') : t('fromUser')}</TableHead>
-            <TableHead className="text-start">{t('file')}</TableHead>
-            <TableHead className="text-start">{t('status')}</TableHead>
-            <TableHead className="text-start">{t('date')}</TableHead>
+            <TableHead>{t('transferId')}</TableHead>
+            <TableHead>{tab === 'sent' ? t('toUser') : t('fromUser')}</TableHead>
+            <TableHead>{t('file')}</TableHead>
+            <TableHead>{t('status')}</TableHead>
+            <TableHead>{t('date')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -151,11 +151,11 @@ const TransferTable = ({ paginated, statusBadge, t, tab }: { paginated: Transfer
             <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">{t('noData')}</TableCell></TableRow>
           ) : paginated.map((tr) => (
             <TableRow key={tr.id}>
-              <TableCell className="font-medium text-start">#{tr.id}</TableCell>
-              <TableCell className="text-start">{tab === 'sent' ? tr.toUser : tr.fromUser}</TableCell>
-              <TableCell className="text-start">{tr.fileId}</TableCell>
-              <TableCell className="text-start">{statusBadge(tr.status)}</TableCell>
-              <TableCell className="text-start">{tr.date}</TableCell>
+              <TableCell className="font-medium">#{tr.id}</TableCell>
+              <TableCell>{tab === 'sent' ? tr.toUser : tr.fromUser}</TableCell>
+              <TableCell>{tr.fileId}</TableCell>
+              <TableCell>{statusBadge(tr.status)}</TableCell>
+              <TableCell>{tr.date}</TableCell>
             </TableRow>
           ))}
         </TableBody>
