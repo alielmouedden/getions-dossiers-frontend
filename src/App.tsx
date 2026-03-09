@@ -15,6 +15,7 @@ import MyTransfersPage from "./pages/MyTransfersPage";
 import ReferFilePage from "./pages/ReferFilePage";
 import SystemLogsPage from "./pages/SystemLogsPage";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -30,12 +31,12 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/users" element={<UsersPage />} />
+            <Route path="/users" element={<ProtectedRoute allowedRoles={['admin']}><UsersPage /></ProtectedRoute>} />
             <Route path="/files" element={<FilesPage />} />
-            <Route path="/transfers" element={<TransfersPage />} />
+            <Route path="/transfers" element={<ProtectedRoute allowedRoles={['admin']}><TransfersPage /></ProtectedRoute>} />
             <Route path="/my-transfers" element={<MyTransfersPage />} />
             <Route path="/refer-file" element={<ReferFilePage />} />
-            <Route path="/system-logs" element={<SystemLogsPage />} />
+            <Route path="/system-logs" element={<ProtectedRoute allowedRoles={['admin']}><SystemLogsPage /></ProtectedRoute>} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
