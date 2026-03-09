@@ -119,7 +119,7 @@ const FilesPage = () => {
               <DropdownMenuItem onClick={() => {
                 const headers = [
                   { key: 'fileNumber', label: t('fileNumber') }, { key: 'folderNumber', label: t('folderNumber') },
-                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationDate') },
+                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationYear') },
                 ];
                 exportToCSV(filtered as unknown as Record<string, string>[], headers, 'files');
               }}>
