@@ -83,6 +83,16 @@ const LoginPage = () => {
                   </button>
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label>{t('role')}</Label>
+                <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as 'admin' | 'employee')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">{t('admin')}</SelectItem>
+                    <SelectItem value="employee">{t('employee')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? t('loading') : t('loginBtn')}
               </Button>
