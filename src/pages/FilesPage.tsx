@@ -260,7 +260,7 @@ const FilesPage = () => {
                 <TableHead>{t('fileNumber')}</TableHead>
                 <TableHead>{t('folderNumber')}</TableHead>
                 <TableHead>{t('createdBy')}</TableHead>
-                <TableHead>{t('creationDate')}</TableHead>
+                <TableHead>{t('creationYear')}</TableHead>
                 <TableHead>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
