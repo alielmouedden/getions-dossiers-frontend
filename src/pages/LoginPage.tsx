@@ -14,8 +14,10 @@ const LoginPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setRole, setUsername: setAuthUsername } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'admin' | 'employee'>('admin');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
