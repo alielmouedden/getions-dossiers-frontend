@@ -10,7 +10,7 @@ interface AppSidebarProps {
 }
 
 const menuItems = [
-  { key: 'dashboard', icon: LayoutDashboard, path: '/' },
+  { key: 'dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { key: 'userManagement', icon: Users, path: '/users' },
   { key: 'fileManagement', icon: FolderOpen, path: '/files' },
   { key: 'transferManagement', icon: ArrowRightLeft, path: '/transfers' },
