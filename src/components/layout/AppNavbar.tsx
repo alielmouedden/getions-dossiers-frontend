@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Menu, Sun, Moon, Globe, LogOut, User, Bell, FileText, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
