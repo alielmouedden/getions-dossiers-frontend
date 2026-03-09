@@ -12,6 +12,7 @@ import FilesPage from "./pages/FilesPage";
 import TransfersPage from "./pages/TransfersPage";
 import MyTransfersPage from "./pages/MyTransfersPage";
 import ReferFilePage from "./pages/ReferFilePage";
+import SystemLogsPage from "./pages/SystemLogsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/my-transfers" element={<MyTransfersPage />} />
             <Route path="/refer-file" element={<ReferFilePage />} />
+            <Route path="/system-logs" element={<SystemLogsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
