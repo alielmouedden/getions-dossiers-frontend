@@ -214,18 +214,15 @@ const FilesPage = () => {
               <FieldError error={editErrors.createdBy} />
             </div>
             <div className="space-y-1">
-              <Label>{t('creationDate')}</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-start font-normal", !editDate && "text-muted-foreground")}>
-                    <CalendarIcon className="me-2 h-4 w-4" />
-                    {editDate ? format(editDate, 'PPP') : t('creationDate')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={editDate} onSelect={setEditDate} initialFocus className="p-3 pointer-events-auto" />
-                </PopoverContent>
-              </Popover>
+              <Label>{t('creationYear')}</Label>
+              <Input
+                type="number"
+                min="1900"
+                max="2099"
+                placeholder={t('creationYear')}
+                value={editYear}
+                onChange={(e) => setEditYear(e.target.value)}
+              />
             </div>
             <div className="flex gap-2 pt-2">
               <Button onClick={handleEditSave} className="flex-1">{t('save')}</Button>
