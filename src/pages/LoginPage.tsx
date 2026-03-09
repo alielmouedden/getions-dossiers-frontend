@@ -26,8 +26,10 @@ const LoginPage = () => {
     setLoading(true);
     setTimeout(() => {
       if (username && password) {
+        setRole(selectedRole);
+        setAuthUsername(username);
         toast({ title: t('welcome'), description: t('loginBtn') });
-        navigate('/');
+        navigate('/dashboard');
       }
       setLoading(false);
     }, 800);
