@@ -94,6 +94,10 @@ const MyTransfersPage = () => {
         </TabsList>
 
         <div className="flex flex-col sm:flex-row gap-3 mt-4">
+          <div className="relative flex-1">
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder={t('search')} value={search} onChange={(e) => handleSearch(e.target.value)} className="ps-9" />
+          </div>
           <Select value={statusFilter} onValueChange={handleStatusFilter}>
             <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder={t('filterByStatus')} /></SelectTrigger>
             <SelectContent>
@@ -103,10 +107,6 @@ const MyTransfersPage = () => {
               <SelectItem value="completed">{t('completed')}</SelectItem>
             </SelectContent>
           </Select>
-          <div className="relative flex-1">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder={t('search')} value={search} onChange={(e) => handleSearch(e.target.value)} className="ps-9" />
-          </div>
         </div>
 
         <TabsContent value="sent" className="mt-4">
