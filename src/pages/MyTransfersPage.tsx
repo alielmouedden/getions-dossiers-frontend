@@ -87,8 +87,8 @@ const MyTransfersPage = () => {
         </DropdownMenu>
       </div>
 
-      <Tabs value={tab} onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-2 max-w-xs">
+      <Tabs value={tab} onValueChange={handleTabChange} className="flex justify-end">
+        <TabsList className="grid grid-cols-2 max-w-xs">
           <TabsTrigger value="sent">{t('sentTransfers')}</TabsTrigger>
           <TabsTrigger value="received">{t('receivedTransfers')}</TabsTrigger>
         </TabsList>
