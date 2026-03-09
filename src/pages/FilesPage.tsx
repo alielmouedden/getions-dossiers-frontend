@@ -75,7 +75,7 @@ const FilesPage = () => {
   const handleEdit = (file: CaseFile) => {
     setSelectedFile(file);
     setEditForm({ fileNumber: file.fileNumber, folderNumber: file.folderNumber, createdBy: file.createdBy });
-    setEditDate(file.creationDate ? new Date(file.creationDate) : undefined);
+    setEditYear(file.creationDate ? file.creationDate.substring(0, 4) : '');
     setEditErrors({});
     setEditOpen(true);
   };
