@@ -84,7 +84,7 @@ const FilesPage = () => {
     if (!selectedFile) return;
     const { success, errors: validationErrors } = validateForm(fileSchema, editForm, t);
     if (!success) { setEditErrors(validationErrors); return; }
-    setFiles(files.map(f => f.id === selectedFile.id ? { ...f, ...editForm, creationDate: editDate ? format(editDate, 'yyyy-MM-dd') : f.creationDate } : f));
+    setFiles(files.map(f => f.id === selectedFile.id ? { ...f, ...editForm, creationDate: editYear || f.creationDate } : f));
     setEditOpen(false);
     setSelectedFile(null);
     setEditErrors({});
