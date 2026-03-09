@@ -123,5 +123,10 @@
   "noNotifications": "لا توجد إشعارات",
   "myTransfersLog": "سجل إحالاتي",
   "sentTransfers": "الإحالات المرسلة",
-  "receivedTransfers": "الإحالات المستلمة"
+  "receivedTransfers": "الإحالات المستلمة",
+  "referFile": "إحالة ملف",
+  "newFileReferral": "إحالة ملف جديد",
+  "selectOption": "اختر خياراً",
+  "pendingReceipt": "قيد الإستلام",
+  "sendReferral": "إرسال الإحالة"
 }

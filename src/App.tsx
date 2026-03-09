@@ -31,6 +31,7 @@ const App = () => (
             <Route path="/files" element={<FilesPage />} />
             <Route path="/transfers" element={<TransfersPage />} />
             <Route path="/my-transfers" element={<MyTransfersPage />} />
+            <Route path="/refer-file" element={<ReferFilePage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
