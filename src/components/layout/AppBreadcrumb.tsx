@@ -17,6 +17,7 @@ const routeTranslations: Record<string, string> = {
   '/files': 'fileManagement',
   '/transfers': 'transferManagement',
   '/my-transfers': 'myTransfersLog',
+  '/refer-file': 'referFile',
 };
 
 export const AppBreadcrumb = () => {

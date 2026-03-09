@@ -123,5 +123,10 @@
   "noNotifications": "Aucune notification",
   "myTransfersLog": "Mon journal de transferts",
   "sentTransfers": "Transferts envoyés",
-  "receivedTransfers": "Transferts reçus"
+  "receivedTransfers": "Transferts reçus",
+  "referFile": "Transférer un dossier",
+  "newFileReferral": "Nouveau transfert de dossier",
+  "selectOption": "Sélectionner une option",
+  "pendingReceipt": "En attente de réception",
+  "sendReferral": "Envoyer le transfert"
 }
