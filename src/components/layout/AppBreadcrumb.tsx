@@ -1,3 +1,4 @@
+import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from '@/components/NavLink';
@@ -53,18 +54,20 @@ export const AppBreadcrumb = () => {
           const translationKey = routeTranslations[path] || segment;
 
           return (
-            <BreadcrumbItem key={path}>
+            <React.Fragment key={path}>
               <BreadcrumbSeparator />
-              {isLast ? (
-                <BreadcrumbPage>{t(translationKey)}</BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink asChild>
-                  <NavLink to={path} className="hover:text-foreground">
-                    {t(translationKey)}
-                  </NavLink>
-                </BreadcrumbLink>
-              )}
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{t(translationKey)}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <NavLink to={path} className="hover:text-foreground">
+                      {t(translationKey)}
+                    </NavLink>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
           );
         })}
       </BreadcrumbList>

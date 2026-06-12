@@ -11,21 +11,33 @@ interface AppSidebarProps {
 }
 
 const menuItems = [
-  { key: 'dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'employee'] },
-  { key: 'userManagement', icon: Users, path: '/users', roles: ['admin'] },
-  { key: 'fileManagement', icon: FolderOpen, path: '/files', roles: ['admin', 'employee'] },
-  { key: 'transferManagement', icon: ArrowRightLeft, path: '/transfers', roles: ['admin'] },
-  { key: 'myTransfersLog', icon: ClipboardList, path: '/my-transfers', roles: ['admin', 'employee'] },
-  { key: 'referFile', icon: Send, path: '/refer-file', roles: ['admin', 'employee'] },
-  { key: 'systemLogs', icon: ScrollText, path: '/system-logs', roles: ['admin'] },
+  { key: 'dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'manager'] },
+  { key: 'userManagement', icon: Users, path: '/users', roles: ['admin', 'manager'] },
+  { key: 'fileManagement', icon: FolderOpen, path: '/files', roles: ['admin', 'manager', 'clerk'] },
+  { key: 'transferManagement', icon: ArrowRightLeft, path: '/transfers', roles: ['admin', 'manager'] },
+  { key: 'myTransfersLog', icon: ClipboardList, path: '/my-transfers', roles: ['admin', 'manager', 'clerk', 'session_clerk'] },
+  { key: 'referFile', icon: Send, path: '/refer-file', roles: ['admin', 'manager', 'clerk', 'session_clerk'] },
+  { key: 'systemLogs', icon: ScrollText, path: '/system-logs', roles: ['admin', 'manager'] },
 ];
 
 export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
   const { t } = useTranslation();
   const location = useLocation();
-  const { role } = useAuth();
-
-  const visibleItems = menuItems.filter(item => item.roles.includes(role));
+  const { user } = useAuth();
+  
+  const roles = user?.roles?.map(r => r.replace('ROLE_', '').toLowerCase()) || 
+                (user?.role ? [user.role.toLowerCase()] : []);
+                
+  const userRolesMapped = roles.flatMap(role => {
+    if (role === 'manager' || role === 'admin') {
+      return ['admin', 'manager', 'clerk', 'session_clerk', 'archive_officer'];
+    }
+    return [role];
+  });
+  
+  const visibleItems = menuItems.filter(item => 
+    item.roles.some(r => userRolesMapped.includes(r.toLowerCase()))
+  );
 
   return (
     <>

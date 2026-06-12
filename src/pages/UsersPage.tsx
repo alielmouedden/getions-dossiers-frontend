@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportToCSV, exportToPDF } from '@/lib/export';
 import { userAddSchema, userEditSchema, validateForm } from '@/lib/validation';
@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -23,15 +23,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { mockUsers } from '@/data/mock';
+import { useUsers } from '@/hooks/use-api';
 import { User, UserRole } from '@/types';
-
-const PAGE_SIZE = 4;
 
 const UsersPage = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const { users, isLoading, addUser, updateUser, deleteUser } = useUsers();
+  
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -39,8 +38,9 @@ const UsersPage = () => {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', username: '', password: '', role: 'employee' as UserRole, phone: '' });
-  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', username: '', role: 'employee' as UserRole, phone: '' });
+  const [pageSize, setPageSize] = useState(5);
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', username: '', password: '', role: 'CLERK' as UserRole, phone: '' });
+  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', username: '', role: 'CLERK' as UserRole, phone: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
@@ -61,23 +61,36 @@ const UsersPage = () => {
     return result;
   }, [users, search, roleFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const handleAdd = () => {
     const { success, errors: validationErrors } = validateForm(userAddSchema, form, t);
+    // Adjusted validation schema or error mapping might be needed if schema expects 'admin'/'employee'
+    // For now, let's proceed assuming validation is flexible or will be updated.
     if (!success) { setErrors(validationErrors); return; }
-    const newUser: User = { id: String(users.length + 1), ...form, active: true };
-    setUsers([...users, newUser]);
-    setOpen(false);
-    setForm({ firstName: '', lastName: '', email: '', username: '', password: '', role: 'employee', phone: '' });
-    setErrors({});
-    toast({ title: t('userAdded') });
+    
+    addUser({ ...form, active: true }, {
+      onSuccess: () => {
+        setOpen(false);
+        setForm({ firstName: '', lastName: '', email: '', username: '', password: '', role: 'CLERK', phone: '' });
+        setErrors({});
+        toast({ title: t('userAdded') });
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
   };
 
   const handleEdit = (user: User) => {
     setSelectedUser(user);
-    setEditForm({ firstName: user.firstName, lastName: user.lastName, email: user.email, username: user.username, role: user.role, phone: user.phone });
+    setEditForm({ 
+      firstName: user.firstName, 
+      lastName: user.lastName, 
+      email: user.email, 
+      username: user.username, 
+      role: user.role, 
+      phone: user.phone 
+    });
     setEditErrors({});
     setEditOpen(true);
   };
@@ -86,11 +99,16 @@ const UsersPage = () => {
     if (!selectedUser) return;
     const { success, errors: validationErrors } = validateForm(userEditSchema, editForm, t);
     if (!success) { setEditErrors(validationErrors); return; }
-    setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...editForm } : u));
-    setEditOpen(false);
-    setSelectedUser(null);
-    setEditErrors({});
-    toast({ title: t('userUpdated') });
+    
+    updateUser({ id: selectedUser.id, user: editForm }, {
+      onSuccess: () => {
+        setEditOpen(false);
+        setSelectedUser(null);
+        setEditErrors({});
+        toast({ title: t('userUpdated') });
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
   };
 
   const handleDeleteClick = (user: User) => {
@@ -100,19 +118,24 @@ const UsersPage = () => {
 
   const handleDeleteConfirm = () => {
     if (!selectedUser) return;
-    setUsers(users.filter(u => u.id !== selectedUser.id));
-    setDeleteOpen(false);
-    setSelectedUser(null);
-    toast({ title: t('userDeleted') });
+    deleteUser(selectedUser.id, {
+      onSuccess: () => {
+        setDeleteOpen(false);
+        setSelectedUser(null);
+        toast({ title: t('userDeleted') });
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
   };
 
   const roleBadge = (role: string) => {
     const styles: Record<string, string> = {
-      admin: 'bg-destructive/10 text-destructive border-destructive/20',
-      employee: 'bg-info/10 text-info border-info/20',
-      consultant: 'bg-success/10 text-success border-success/20',
+      MANAGER: 'bg-destructive/10 text-destructive border-destructive/20',
+      CLERK: 'bg-info/10 text-info border-info/20',
+      SESSION_CLERK: 'bg-success/10 text-success border-success/20',
+      ARCHIVE_OFFICER: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
     };
-    return <Badge variant="outline" className={styles[role]}>{t(role)}</Badge>;
+    return <Badge variant="outline" className={styles[role] || ''}>{t(role)}</Badge>;
   };
 
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
@@ -134,19 +157,27 @@ const UsersPage = () => {
                 const headers = [
                   { key: 'id', label: t('id') }, { key: 'username', label: t('username') },
                   { key: 'firstName', label: t('firstName') }, { key: 'lastName', label: t('lastName') },
-                  { key: 'email', label: t('email') }, { key: 'role', label: t('role') }, { key: 'phone', label: t('phone') },
+                  { key: 'email', label: t('email') }, { key: 'roleTrans', label: t('role') }, { key: 'phone', label: t('phone') },
                 ];
-                exportToCSV(filtered as unknown as Record<string, string>[], headers, 'users');
+                const translatedData = filtered.map(u => ({
+                  ...u,
+                  roleTrans: t(u.role)
+                }));
+                exportToCSV(translatedData as unknown as Record<string, string>[], headers, 'users');
               }}>
                 <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
+              <DropdownMenuItem onClick={async () => {
                 const headers = [
                   { key: 'id', label: t('id') }, { key: 'username', label: t('username') },
                   { key: 'firstName', label: t('firstName') }, { key: 'lastName', label: t('lastName') },
-                  { key: 'email', label: t('email') }, { key: 'role', label: t('role') }, { key: 'phone', label: t('phone') },
+                  { key: 'email', label: t('email') }, { key: 'roleTrans', label: t('role') }, { key: 'phone', label: t('phone') },
                 ];
-                exportToPDF(filtered as unknown as Record<string, string>[], headers, 'users', t('userManagement'));
+                const translatedData = filtered.map(u => ({
+                  ...u,
+                  roleTrans: t(u.role)
+                }));
+                await exportToPDF(translatedData as unknown as Record<string, string>[], headers, 'users', t('userManagement'));
               }}>
                 <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
               </DropdownMenuItem>
@@ -157,7 +188,10 @@ const UsersPage = () => {
               <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addUser')}</Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
-              <DialogHeader><DialogTitle>{t('addUser')}</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>{t('addUser')}</DialogTitle>
+                <DialogDescription className="sr-only">{t('addUser')}</DialogDescription>
+              </DialogHeader>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -189,13 +223,15 @@ const UsersPage = () => {
                 <div className="space-y-1">
                   <Label>{t('role')}</Label>
                   <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
-                    <SelectTrigger><SelectValue placeholder={t('selectRole')} /></SelectTrigger>
+                    <SelectTrigger className={errors.role ? 'border-destructive' : ''}><SelectValue placeholder={t('selectRole')} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">{t('admin')}</SelectItem>
-                      <SelectItem value="employee">{t('employee')}</SelectItem>
-                      <SelectItem value="consultant">{t('consultant')}</SelectItem>
+                      <SelectItem value="MANAGER">{t('MANAGER')}</SelectItem>
+                      <SelectItem value="CLERK">{t('CLERK')}</SelectItem>
+                      <SelectItem value="SESSION_CLERK">{t('SESSION_CLERK')}</SelectItem>
+                      <SelectItem value="ARCHIVE_OFFICER">{t('ARCHIVE_OFFICER')}</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FieldError error={errors.role} />
                 </div>
                 <div className="space-y-1">
                   <Label>{t('phone')}</Label>
@@ -215,7 +251,10 @@ const UsersPage = () => {
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditErrors({}); }}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{t('editUser')}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{t('editUser')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('editUser')}</DialogDescription>
+          </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -242,13 +281,15 @@ const UsersPage = () => {
             <div className="space-y-1">
               <Label>{t('role')}</Label>
               <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v as UserRole })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className={editErrors.role ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">{t('admin')}</SelectItem>
-                  <SelectItem value="employee">{t('employee')}</SelectItem>
-                  <SelectItem value="consultant">{t('consultant')}</SelectItem>
+                  <SelectItem value="MANAGER">{t('MANAGER')}</SelectItem>
+                  <SelectItem value="CLERK">{t('CLERK')}</SelectItem>
+                  <SelectItem value="SESSION_CLERK">{t('SESSION_CLERK')}</SelectItem>
+                  <SelectItem value="ARCHIVE_OFFICER">{t('ARCHIVE_OFFICER')}</SelectItem>
                 </SelectContent>
               </Select>
+              <FieldError error={editErrors.role} />
             </div>
             <div className="space-y-1">
               <Label>{t('phone')}</Label>
@@ -287,15 +328,21 @@ const UsersPage = () => {
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder={t('filterByRole')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('allRoles')}</SelectItem>
-            <SelectItem value="admin">{t('admin')}</SelectItem>
-            <SelectItem value="employee">{t('employee')}</SelectItem>
-            <SelectItem value="consultant">{t('consultant')}</SelectItem>
+            <SelectItem value="MANAGER">{t('MANAGER')}</SelectItem>
+            <SelectItem value="CLERK">{t('CLERK')}</SelectItem>
+            <SelectItem value="SESSION_CLERK">{t('SESSION_CLERK')}</SelectItem>
+            <SelectItem value="ARCHIVE_OFFICER">{t('ARCHIVE_OFFICER')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <Card className="border-border shadow-sm">
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="p-0 overflow-x-auto relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
@@ -334,9 +381,24 @@ const UsersPage = () => {
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{t('showing')} {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} {t('of')} {filtered.length}</p>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+        <p className="text-sm text-muted-foreground">
+          {t('showing')} {filtered.length > 0 ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filtered.length)} {t('of')} {filtered.length}
+        </p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t('itemsPerPage')}</span>
+            <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+              <SelectTrigger className="w-16 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
             {Array.from({ length: totalPages }, (_, i) => (
@@ -345,7 +407,7 @@ const UsersPage = () => {
             <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

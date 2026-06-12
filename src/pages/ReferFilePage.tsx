@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Send } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,16 +10,22 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { mockUsers, mockFiles } from '@/data/mock';
-
-const CURRENT_USER = 'أحمد محمدي';
+import { useFiles, useUsers, useTransfers } from '@/hooks/use-api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ReferFilePage = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth(); // Logged in user
+  const { files, isLoading: filesLoading } = useFiles('available');
+  const { users, isLoading: usersLoading } = useUsers();
+  const { addTransfer } = useTransfers();
+  
   const [form, setForm] = useState({ fileId: '', toUser: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const isLoading = filesLoading || usersLoading;
 
   const handleSubmit = () => {
     const newErrors: Record<string, string> = {};
@@ -29,9 +35,25 @@ const ReferFilePage = () => {
       setErrors(newErrors);
       return;
     }
-    setErrors({});
-    toast({ title: t('transferAdded') });
-    navigate('/my-transfers');
+    
+    const folder = files.find(f => f.folderNumber === form.fileId);
+    const toUser = users.find(u => `${u.firstName} ${u.lastName}` === form.toUser);
+
+    const transferData = {
+      folder: folder ? { folderId: Number(folder.id) } : null,
+      toUser: toUser ? { userId: Number(toUser.id) } : null,
+      purpose: 'File Referral',
+      transferDate: new Date().toISOString().split('T')[0],
+      status: 'PENDING'
+    };
+
+    addTransfer(transferData, {
+      onSuccess: () => {
+        toast({ title: t('transferAdded') });
+        navigate('/my-transfers');
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
   };
 
   const FieldError = ({ error }: { error?: string }) =>
@@ -54,8 +76,8 @@ const ReferFilePage = () => {
                 <SelectValue placeholder={t('selectOption')} />
               </SelectTrigger>
               <SelectContent>
-                {mockFiles.map((f) => (
-                  <SelectItem key={f.id} value={f.fileNumber}>{f.fileNumber}</SelectItem>
+                {files.map((f) => (
+                  <SelectItem key={f.id} value={f.folderNumber}>{f.folderNumber}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -65,7 +87,7 @@ const ReferFilePage = () => {
           {/* From User (read-only) */}
           <div className="space-y-1.5">
             <Label>{t('fromUser')}</Label>
-            <Input value={CURRENT_USER} disabled className="bg-muted" />
+            <Input value={user ? `${user.firstName} ${user.lastName}` : ''} disabled className="bg-muted" />
           </div>
 
           {/* To User */}
@@ -76,8 +98,8 @@ const ReferFilePage = () => {
                 <SelectValue placeholder={t('selectOption')} />
               </SelectTrigger>
               <SelectContent>
-                {mockUsers
-                  .filter(u => `${u.firstName} ${u.lastName}` !== CURRENT_USER)
+                {users
+                  .filter(u => u.username !== user?.username)
                   .map((u) => (
                     <SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>
                       {u.firstName} {u.lastName}

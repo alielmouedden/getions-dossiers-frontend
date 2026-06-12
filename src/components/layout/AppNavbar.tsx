@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Menu, Sun, Moon, Globe, LogOut, User, Bell, FileText, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/hooks/use-api';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,6 +11,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+
+import { useNavigate } from 'react-router-dom';
 
 interface AppNavbarProps {
   onToggleSidebar: () => void;
@@ -28,13 +32,49 @@ export const AppNavbar = ({
   language,
 }: AppNavbarProps) => {
   const { t } = useTranslation();
-  const { role } = useAuth();
+  const { user } = useAuth();
+  const { notifications: rawNotifications } = useNotifications();
 
-  // Mock notifications
-  const notifications = [
-    { id: 1, type: 'transfer', message: t('fileTransferredToYou'), time: '10:30' },
-    { id: 2, type: 'received', message: t('transferReceived'), time: '09:15' },
-  ];
+  const [clearedIds, setClearedIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('clearedNotifications');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [lastSeenCount, setLastSeenCount] = useState(0);
+
+  const navigate = useNavigate();
+
+  const notifications = rawNotifications
+    .filter(n => (n.toUser === `${user?.firstName} ${user?.lastName}` || n.fromUser === `${user?.firstName} ${user?.lastName}`))
+    .filter(n => !clearedIds.includes(n.id))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
+    .map(n => {
+      const isRecipient = n.toUser === `${user?.firstName} ${user?.lastName}`;
+      return {
+        id: n.id,
+        type: isRecipient ? 'transfer' : 'received',
+        message: isRecipient ? t('fileTransferredToYou') : t('transferReceived'),
+        time: n.date,
+        folderNumber: n.fileId,
+      };
+    });
+
+  const unreadCount = notifications.length > lastSeenCount ? notifications.length - lastSeenCount : 0;
+
+  const handleClearAll = () => {
+    const newCleared = [...clearedIds, ...notifications.map(n => n.id)];
+    setClearedIds(newCleared);
+    localStorage.setItem('clearedNotifications', JSON.stringify(newCleared));
+    setLastSeenCount(0);
+  };
+
+  const handleNotificationClick = (folderNumber?: string) => {
+    if (folderNumber) {
+      navigate(`/files?search=${folderNumber}`);
+    } else {
+      navigate('/my-transfers', { state: { tab: 'received' } });
+    }
+  };
 
   return (
     <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 shrink-0 sticky top-0 z-50">
@@ -44,29 +84,37 @@ export const AppNavbar = ({
 
       <div className="flex items-center gap-2">
         {/* Notifications */}
-        <DropdownMenu dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <DropdownMenu dir={language === 'ar' ? 'rtl' : 'ltr'} onOpenChange={(open) => {
+          if (open) setLastSeenCount(notifications.length);
+        }}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
               <Bell className="w-4 h-4" />
-              {notifications.length > 0 && (
+              {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
-                  {notifications.length}
+                  {unreadCount}
                 </span>
               )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80 p-0">
-            <div className="px-4 py-3 bg-accent/50 border-b border-border">
+            <div className="px-4 py-3 bg-accent/50 border-b border-border flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <Bell className="w-4 h-4 text-primary" />
                 {t('notifications')}
               </h3>
+              {notifications.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={handleClearAll} className="h-7 text-[10px] px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                  {t('clear')}
+                </Button>
+              )}
             </div>
             <div className="max-h-80 overflow-y-auto">
               {notifications.length > 0 ? (
                 notifications.map((notif, index) => (
                   <div 
                     key={notif.id} 
+                    onClick={() => handleNotificationClick(notif.folderNumber)}
                     className={`flex items-start gap-3 p-4 hover:bg-accent/30 cursor-pointer transition-colors ${
                       index !== notifications.length - 1 ? 'border-b border-border/50' : ''
                     }`}
@@ -119,10 +167,13 @@ export const AppNavbar = ({
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="w-4 h-4 text-primary" />
               </div>
-              <span className="hidden md:inline text-sm">{t(role)}</span>
+              <span className="hidden md:inline text-sm">
+                {user ? `${user.firstName} ${user.lastName}` : t('user')}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+              {user?.username}
             <DropdownMenuItem onClick={onLogout} className="gap-2 text-destructive">
               <LogOut className="w-4 h-4" />
               {t('logout')}

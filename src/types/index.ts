@@ -1,7 +1,8 @@
-export type UserRole = 'admin' | 'employee' | 'consultant';
+export type UserRole = 'MANAGER' | 'CLERK' | 'SESSION_CLERK' | 'ARCHIVE_OFFICER';
 
 export interface User {
-  id: string;
+  userId?: number;
+  id: string; // Mapped from userId
   username: string;
   firstName: string;
   lastName: string;
@@ -9,17 +10,19 @@ export interface User {
   role: UserRole;
   phone: string;
   active: boolean;
+  password?: string;
 }
 
 export interface CaseFile {
   id: string;
-  fileNumber: string;
   folderNumber: string;
+  folderSymbol: string;
   createdBy: string;
   creationDate: string;
+  statuts?: string;
 }
 
-export type TransferStatus = 'pending' | 'received' | 'completed';
+export type TransferStatus = 'PENDING' | 'RECEIVED' | 'COMPLETED' | 'REJECTED' | 'pending' | 'received' | 'completed';
 
 export interface Transfer {
   id: string;

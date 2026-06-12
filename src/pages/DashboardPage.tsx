@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, FolderOpen, ArrowRightLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Users, FolderOpen, ArrowRightLeft, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -9,36 +11,69 @@ import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { mockUsers, mockFiles, mockTransfers } from '@/data/mock';
+import { useUsers, useFiles, useTransfers } from '@/hooks/use-api';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { users, isLoading: usersLoading } = useUsers();
+  const { files: allFiles, isLoading: filesLoading } = useFiles('available');
+  const { transfers: allTransfers, isLoading: transfersLoading } = useTransfers('me');
+
+  const isAdmin = user?.role === 'MANAGER' || (user?.roles && (user.roles.includes('ROLE_MANAGER') || user.roles.includes('MANAGER')));
+  const isSessionClerk = user?.role === 'SESSION_CLERK' || (user?.roles && (user.roles.includes('ROLE_SESSION_CLERK') || user.roles.includes('SESSION_CLERK')));
+  const userName = user ? `${user.firstName} ${user.lastName}` : '';
+
+  const files = allFiles;
+  const transfers = allTransfers;
+
+  const isLoading = usersLoading || filesLoading || transfersLoading;
 
   const statCards = [
-    { key: 'totalUsers', icon: Users, value: mockUsers.length, color: 'text-info' },
-    { key: 'totalFiles', icon: FolderOpen, value: mockFiles.length, color: 'text-success' },
-    { key: 'transferRequests', icon: ArrowRightLeft, value: mockTransfers.length, color: 'text-warning' },
+    { key: 'totalUsers', icon: Users, value: users.length, color: 'text-info' },
+    { key: 'totalFiles', icon: FolderOpen, value: files.length, color: 'text-success' },
+    { key: 'transferRequests', icon: ArrowRightLeft, value: transfers.length, color: 'text-warning' },
   ];
 
-  const monthlyData = [
-    { month: t('jan'), files: 3200, transfers: 1800 },
-    { month: t('feb'), files: 5900, transfers: 3400 },
-    { month: t('mar'), files: 4500, transfers: 2100 },
-    { month: t('apr'), files: 8200, transfers: 5800 },
-    { month: t('may'), files: 12800, transfers: 9100 },
-    { month: t('jun'), files: 15000, transfers: 11600 },
-  ];
+  // REAL AGGREGATION: Group files and transfers by month for the last 6 months
+  const months = [5, 4, 3, 2, 1, 0].map(i => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    return {
+      monthStr: d.toLocaleString('default', { month: 'short' }).toLowerCase(),
+      monthName: t(d.toLocaleString('default', { month: 'short' }).toLowerCase()),
+      monthIndex: d.getMonth(),
+      year: d.getFullYear()
+    };
+  });
+
+  const monthlyData = months.map(m => {
+    const fileCount = allFiles.filter(f => {
+      if (!f.creationDate) return false;
+      const d = new Date(f.creationDate);
+      return d.getMonth() === m.monthIndex && d.getFullYear() === m.year;
+    }).length;
+
+    const transferCount = allTransfers.filter(tr => {
+      if (!tr.date) return false;
+      const d = new Date(tr.date);
+      return d.getMonth() === m.monthIndex && d.getFullYear() === m.year;
+    }).length;
+
+    return { month: m.monthName, files: fileCount, transfers: transferCount };
+  });
 
   const transferStatusData = [
-    { name: t('completed'), value: mockTransfers.filter(t => t.status === 'completed').length || 1, fill: 'hsl(var(--success))' },
-    { name: t('pending'), value: mockTransfers.filter(t => t.status === 'pending').length || 2, fill: 'hsl(var(--warning))' },
-    { name: t('received'), value: mockTransfers.filter(t => t.status === 'received').length || 1, fill: 'hsl(var(--info))' },
+    { name: t('completed'), value: transfers.filter(t => t.status === 'completed').length || 0, fill: 'hsl(var(--success))' },
+    { name: t('pending'), value: transfers.filter(t => t.status === 'pending').length || 0, fill: 'hsl(var(--warning))' },
+    { name: t('received'), value: transfers.filter(t => t.status === 'received').length || 0, fill: 'hsl(var(--info))' },
   ];
 
   const roleData = [
-    { name: t('admin'), value: mockUsers.filter(u => u.role === 'admin').length, fill: 'hsl(var(--primary))' },
-    { name: t('employee'), value: mockUsers.filter(u => u.role === 'employee').length, fill: 'hsl(var(--info))' },
-    { name: t('consultant'), value: mockUsers.filter(u => u.role === 'consultant').length, fill: 'hsl(var(--warning))' },
+    { name: t('MANAGER'), value: users.filter(u => u.role === 'MANAGER').length, fill: 'hsl(var(--primary))' },
+    { name: t('CLERK'), value: users.filter(u => u.role === 'CLERK').length, fill: 'hsl(var(--info))' },
+    { name: t('SESSION_CLERK'), value: users.filter(u => u.role === 'SESSION_CLERK').length, fill: 'hsl(var(--warning))' },
+    { name: t('ARCHIVE_OFFICER'), value: users.filter(u => u.role === 'ARCHIVE_OFFICER').length, fill: 'hsl(var(--success))' },
   ];
 
   const barChartConfig = {
@@ -62,6 +97,8 @@ const DashboardPage = () => {
       </Badge>
     );
   };
+
+  if (isLoading) return <div className="flex h-[400px] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -221,10 +258,12 @@ const DashboardPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockFiles.slice(0, 3).map((file) => (
-                <TableRow key={file.id}>
-                  <TableCell className="font-medium">{file.fileNumber}</TableCell>
-                  <TableCell>{file.folderNumber}</TableCell>
+              {files.length === 0 ? (
+                <TableRow><TableCell colSpan={4} className="text-center py-4 text-muted-foreground">{t('noData')}</TableCell></TableRow>
+              ) : files.slice(0, 3).map((file, index) => (
+                <TableRow key={file.id || `file-${index}`}>
+                  <TableCell className="font-medium">{file.folderNumber}</TableCell>
+                  <TableCell>{file.folderSymbol}</TableCell>
                   <TableCell>{file.createdBy}</TableCell>
                   <TableCell>{file.creationDate}</TableCell>
                 </TableRow>
@@ -251,8 +290,10 @@ const DashboardPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockTransfers.slice(0, 3).map((tr) => (
-                <TableRow key={tr.id}>
+              {transfers.length === 0 ? (
+                <TableRow><TableCell colSpan={5} className="text-center py-4 text-muted-foreground">{t('noData')}</TableCell></TableRow>
+              ) : transfers.slice(0, 3).map((tr, index) => (
+                <TableRow key={tr.id || `transfer-${index}`}>
                   <TableCell className="font-medium">#{tr.id}</TableCell>
                   <TableCell>{tr.fromUser}</TableCell>
                   <TableCell>{tr.toUser}</TableCell>

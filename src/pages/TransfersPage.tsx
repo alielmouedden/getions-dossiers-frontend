@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportToCSV, exportToPDF } from '@/lib/export';
 import { transferSchema, validateForm } from '@/lib/validation';
@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -23,15 +23,17 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { mockTransfers, mockUsers, mockFiles } from '@/data/mock';
+import { useTransfers, useUsers, useFiles } from '@/hooks/use-api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Transfer, TransferStatus } from '@/types';
-
-const PAGE_SIZE = 4;
 
 const TransfersPage = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [transfers, setTransfers] = useState<Transfer[]>(mockTransfers);
+  const { transfers, isLoading, addTransfer, updateTransfer, deleteTransfer } = useTransfers('me');
+  const { users } = useUsers();
+  const { files } = useFiles();
+  
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -39,8 +41,9 @@ const TransfersPage = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
-  const [form, setForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'pending' as TransferStatus });
-  const [editForm, setEditForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'pending' as TransferStatus });
+  const [pageSize, setPageSize] = useState(5);
+  const [form, setForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'PENDING' as TransferStatus });
+  const [editForm, setEditForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'PENDING' as TransferStatus });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
@@ -55,31 +58,48 @@ const TransfersPage = () => {
       );
     }
     if (statusFilter !== 'all') {
-      result = result.filter(tr => tr.status === statusFilter);
+      result = result.filter(tr => tr.status === statusFilter.toLowerCase());
     }
     return result;
   }, [transfers, search, statusFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
-  const handleStatusFilter = (val: string) => { setStatusFilter(val); setPage(1); };
+  const handleStatusFilter = (val: string) => { setStatusFilter(val); setPage( page === 1 ? 1 : 1); };
 
   const handleAdd = () => {
     const { success, errors: validationErrors } = validateForm(transferSchema, form, t);
     if (!success) { setErrors(validationErrors); return; }
-    const newTransfer: Transfer = { id: String(transfers.length + 1), ...form, date: new Date().toISOString().split('T')[0] };
-    setTransfers([...transfers, newTransfer]);
-    setOpen(false);
-    setForm({ fromUser: '', toUser: '', fileId: '', status: 'pending' });
-    setErrors({});
-    toast({ title: t('transferAdded') });
+    
+    const folder = files.find(f => f.folderNumber === form.fileId);
+    const fromUser = users.find(u => `${u.firstName} ${u.lastName}` === form.fromUser);
+    const toUser = users.find(u => `${u.firstName} ${u.lastName}` === form.toUser);
+
+    const transferData = {
+      folder: folder ? { folderId: Number(folder.id) } : null,
+      fromUser: fromUser ? { userId: Number(fromUser.id) } : null,
+      toUser: toUser ? { userId: Number(toUser.id) } : null,
+      purpose: 'Transfer Request',
+      transferDate: new Date().toISOString().split('T')[0],
+      requestTransfer: true
+    };
+
+    addTransfer(transferData, {
+      onSuccess: () => {
+        setOpen(false);
+        setForm({ fromUser: '', toUser: '', fileId: '', status: 'PENDING' });
+        setErrors({});
+        toast({ title: t('transferAdded') });
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
   };
 
   const handleEdit = (transfer: Transfer) => {
     setSelectedTransfer(transfer);
-    setEditForm({ fromUser: transfer.fromUser, toUser: transfer.toUser, fileId: transfer.fileId, status: transfer.status });
+    setEditForm({ fromUser: transfer.fromUser, toUser: transfer.toUser, fileId: transfer.fileId, status: transfer.status as TransferStatus });
     setEditErrors({});
     setEditOpen(true);
   };
@@ -88,11 +108,29 @@ const TransfersPage = () => {
     if (!selectedTransfer) return;
     const { success, errors: validationErrors } = validateForm(transferSchema, editForm, t);
     if (!success) { setEditErrors(validationErrors); return; }
-    setTransfers(transfers.map(tr => tr.id === selectedTransfer.id ? { ...tr, ...editForm } : tr));
-    setEditOpen(false);
-    setSelectedTransfer(null);
-    setEditErrors({});
-    toast({ title: t('transferUpdated') });
+    
+    const folder = files.find(f => f.folderNumber === editForm.fileId);
+    const fromUser = users.find(u => `${u.firstName} ${u.lastName}` === editForm.fromUser);
+    const toUser = users.find(u => `${u.firstName} ${u.lastName}` === editForm.toUser);
+
+    const transferData = {
+      folder: folder ? { folderId: Number(folder.id) } : null,
+      fromUser: fromUser ? { userId: Number(fromUser.id) } : null,
+      toUser: toUser ? { userId: Number(toUser.id) } : null,
+      purpose: 'Transfer Update',
+      transferDate: new Date().toISOString().split('T')[0],
+      status: editForm.status
+    };
+
+    updateTransfer({ id: selectedTransfer.id, transfer: transferData }, {
+      onSuccess: () => {
+        setEditOpen(false);
+        setSelectedTransfer(null);
+        setEditErrors({});
+        toast({ title: t('transferUpdated') });
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
   };
 
   const handleDeleteClick = (transfer: Transfer) => {
@@ -102,19 +140,28 @@ const TransfersPage = () => {
 
   const handleDeleteConfirm = () => {
     if (!selectedTransfer) return;
-    setTransfers(transfers.filter(tr => tr.id !== selectedTransfer.id));
-    setDeleteOpen(false);
-    setSelectedTransfer(null);
-    toast({ title: t('transferDeleted') });
+    deleteTransfer(selectedTransfer.id, {
+      onSuccess: () => {
+        setDeleteOpen(false);
+        setSelectedTransfer(null);
+        toast({ title: t('transferDeleted') });
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
   };
 
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'MANAGER' || (user?.roles && (user.roles.includes('ROLE_MANAGER') || user.roles.includes('MANAGER')));
+
   const statusBadge = (status: string) => {
+    const s = status.toLowerCase();
     const styles: Record<string, string> = {
       completed: 'bg-success/10 text-success border-success/20',
       pending: 'bg-warning/10 text-warning border-warning/20',
       received: 'bg-info/10 text-info border-info/20',
+      rejected: 'bg-destructive/10 text-destructive border-destructive/20',
     };
-    return <Badge variant="outline" className={styles[status]}>{t(status)}</Badge>;
+    return <Badge variant="outline" className={styles[s] || ''}>{t(s)}</Badge>;
   };
 
   const FieldError = ({ error }: { error?: string }) => error ? <p className="text-xs text-destructive mt-1">{error}</p> : null;
@@ -133,19 +180,27 @@ const TransfersPage = () => {
                 const headers = [
                   { key: 'id', label: t('transferId') }, { key: 'fromUser', label: t('fromUser') },
                   { key: 'toUser', label: t('toUser') }, { key: 'fileId', label: t('file') },
-                  { key: 'status', label: t('status') }, { key: 'date', label: t('date') },
+                  { key: 'statusTrans', label: t('status') }, { key: 'date', label: t('date') },
                 ];
-                exportToCSV(filtered as unknown as Record<string, string>[], headers, 'transfers');
+                const translatedData = filtered.map(tr => ({
+                  ...tr,
+                  statusTrans: t(tr.status.toLowerCase())
+                }));
+                exportToCSV(translatedData as unknown as Record<string, string>[], headers, 'transfers');
               }}>
                 <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
+              <DropdownMenuItem onClick={async () => {
                 const headers = [
                   { key: 'id', label: t('transferId') }, { key: 'fromUser', label: t('fromUser') },
                   { key: 'toUser', label: t('toUser') }, { key: 'fileId', label: t('file') },
-                  { key: 'status', label: t('status') }, { key: 'date', label: t('date') },
+                  { key: 'statusTrans', label: t('status') }, { key: 'date', label: t('date') },
                 ];
-                exportToPDF(filtered as unknown as Record<string, string>[], headers, 'transfers', t('transferManagement'));
+                const translatedData = filtered.map(tr => ({
+                  ...tr,
+                  statusTrans: t(tr.status.toLowerCase())
+                }));
+                await exportToPDF(translatedData as unknown as Record<string, string>[], headers, 'transfers', t('transferManagement'));
               }}>
                 <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
               </DropdownMenuItem>
@@ -156,13 +211,16 @@ const TransfersPage = () => {
               <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addTransfer')}</Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
-              <DialogHeader><DialogTitle>{t('addTransfer')}</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>{t('addTransfer')}</DialogTitle>
+                <DialogDescription className="sr-only">{t('addTransfer')}</DialogDescription>
+              </DialogHeader>
               <div className="space-y-3">
                 <div className="space-y-1">
                   <Label>{t('selectFile')}</Label>
                   <Select value={form.fileId} onValueChange={(v) => setForm({ ...form, fileId: v })}>
                     <SelectTrigger className={errors.fileId ? 'border-destructive' : ''}><SelectValue placeholder={t('selectFile')} /></SelectTrigger>
-                    <SelectContent>{mockFiles.map((f) => (<SelectItem key={f.id} value={f.fileNumber}>{f.fileNumber}</SelectItem>))}</SelectContent>
+                    <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{f.folderNumber}</SelectItem>))}</SelectContent>
                   </Select>
                   <FieldError error={errors.fileId} />
                 </div>
@@ -170,7 +228,7 @@ const TransfersPage = () => {
                   <Label>{t('fromUser')}</Label>
                   <Select value={form.fromUser} onValueChange={(v) => setForm({ ...form, fromUser: v })}>
                     <SelectTrigger className={errors.fromUser ? 'border-destructive' : ''}><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
-                    <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
+                    <SelectContent>{users.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
                   </Select>
                   <FieldError error={errors.fromUser} />
                 </div>
@@ -178,20 +236,21 @@ const TransfersPage = () => {
                   <Label>{t('toUser')}</Label>
                   <Select value={form.toUser} onValueChange={(v) => setForm({ ...form, toUser: v })}>
                     <SelectTrigger className={errors.toUser ? 'border-destructive' : ''}><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
-                    <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
+                    <SelectContent>{users.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
                   </Select>
                   <FieldError error={errors.toUser} />
                 </div>
                 <div className="space-y-1">
                   <Label>{t('status')}</Label>
                   <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as TransferStatus })}>
-                    <SelectTrigger><SelectValue placeholder={t('selectStatus')} /></SelectTrigger>
+                    <SelectTrigger className={errors.status ? 'border-destructive' : ''}><SelectValue placeholder={t('selectStatus')} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">{t('pending')}</SelectItem>
-                      <SelectItem value="received">{t('received')}</SelectItem>
-                      <SelectItem value="completed">{t('completed')}</SelectItem>
+                      <SelectItem value="PENDING">{t('pending')}</SelectItem>
+                      <SelectItem value="RECEIVED">{t('received')}</SelectItem>
+                      <SelectItem value="COMPLETED">{t('completed')}</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FieldError error={errors.status} />
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
@@ -206,13 +265,16 @@ const TransfersPage = () => {
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditErrors({}); }}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{t('editTransfer')}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{t('editTransfer')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('editTransfer')}</DialogDescription>
+          </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
               <Label>{t('selectFile')}</Label>
               <Select value={editForm.fileId} onValueChange={(v) => setEditForm({ ...editForm, fileId: v })}>
                 <SelectTrigger className={editErrors.fileId ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>{mockFiles.map((f) => (<SelectItem key={f.id} value={f.fileNumber}>{f.fileNumber}</SelectItem>))}</SelectContent>
+                <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{f.folderNumber}</SelectItem>))}</SelectContent>
               </Select>
               <FieldError error={editErrors.fileId} />
             </div>
@@ -220,7 +282,7 @@ const TransfersPage = () => {
               <Label>{t('fromUser')}</Label>
               <Select value={editForm.fromUser} onValueChange={(v) => setEditForm({ ...editForm, fromUser: v })}>
                 <SelectTrigger className={editErrors.fromUser ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
+                <SelectContent>{users.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
               </Select>
               <FieldError error={editErrors.fromUser} />
             </div>
@@ -228,20 +290,21 @@ const TransfersPage = () => {
               <Label>{t('toUser')}</Label>
               <Select value={editForm.toUser} onValueChange={(v) => setEditForm({ ...editForm, toUser: v })}>
                 <SelectTrigger className={editErrors.toUser ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>{mockUsers.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
+                <SelectContent>{users.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
               </Select>
               <FieldError error={editErrors.toUser} />
             </div>
             <div className="space-y-1">
               <Label>{t('status')}</Label>
               <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v as TransferStatus })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className={editErrors.status ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">{t('pending')}</SelectItem>
-                  <SelectItem value="received">{t('received')}</SelectItem>
-                  <SelectItem value="completed">{t('completed')}</SelectItem>
+                  <SelectItem value="PENDING">{t('pending')}</SelectItem>
+                  <SelectItem value="RECEIVED">{t('received')}</SelectItem>
+                  <SelectItem value="COMPLETED">{t('completed')}</SelectItem>
                 </SelectContent>
               </Select>
+              <FieldError error={editErrors.status} />
             </div>
             <div className="flex gap-2 pt-2">
               <Button onClick={handleEditSave} className="flex-1">{t('save')}</Button>
@@ -320,9 +383,24 @@ const TransfersPage = () => {
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{t('showing')} {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} {t('of')} {filtered.length}</p>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+        <p className="text-sm text-muted-foreground">
+          {t('showing')} {filtered.length > 0 ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filtered.length)} {t('of')} {filtered.length}
+        </p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t('itemsPerPage')}</span>
+            <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+              <SelectTrigger className="w-16 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
             {Array.from({ length: totalPages }, (_, i) => (
@@ -331,7 +409,7 @@ const TransfersPage = () => {
             <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

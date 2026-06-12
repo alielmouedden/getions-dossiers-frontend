@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from './AppSidebar';
 import { AppNavbar } from './AppNavbar';
 import { AppBreadcrumb } from './AppBreadcrumb';
@@ -9,6 +10,7 @@ const MainLayout = () => {
   const { i18n } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const isRtl = i18n.language === 'ar';
@@ -31,6 +33,7 @@ const MainLayout = () => {
   };
 
   const handleLogout = () => {
+    logout();
     navigate('/login');
   };
 

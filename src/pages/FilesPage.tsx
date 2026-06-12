@@ -1,18 +1,20 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportToCSV, exportToPDF } from '@/lib/export';
 import { fileSchema, validateForm } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -23,15 +25,23 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { mockFiles, mockUsers } from '@/data/mock';
+import { useFiles, useUsers, useTransfers } from '@/hooks/use-api';
+import { useAuth } from '@/contexts/AuthContext';
 import { CaseFile } from '@/types';
-
-const PAGE_SIZE = 4;
 
 const FilesPage = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [files, setFiles] = useState<CaseFile[]>(mockFiles);
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const userName = user ? `${user.firstName} ${user.lastName}` : '';
+  const isAdmin = user?.role === 'MANAGER' || (user?.roles && (user.roles.includes('ROLE_MANAGER') || user.roles.includes('MANAGER')));
+  const isSessionClerk = user?.role === 'SESSION_CLERK' || (user?.roles && (user.roles.includes('ROLE_SESSION_CLERK') || user.roles.includes('SESSION_CLERK')));
+
+  const { files: allFiles, isLoading, addFile, updateFile, deleteFile } = useFiles(isAdmin ? 'all' : 'me');
+  const { transfers } = useTransfers();
+  const { users } = useUsers();
+
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -40,41 +50,86 @@ const FilesPage = () => {
   const [editYear, setEditYear] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [form, setForm] = useState({ fileNumber: '', folderNumber: '', createdBy: '' });
-  const [editForm, setEditForm] = useState({ fileNumber: '', folderNumber: '', createdBy: '' });
+  const [pageSize, setPageSize] = useState(5);
+  const [form, setForm] = useState({ folderNumber: '', folderSymbol: '', createdBy: '', statuts: 'CREATION' });
+  const [editForm, setEditForm] = useState({ folderNumber: '', folderSymbol: '', createdBy: '', statuts: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
+  // Sync search from URL
+  useEffect(() => {
+    const s = searchParams.get('search');
+    if (s) {
+      setSearch(s);
+      setPage(1);
+    }
+  }, [searchParams]);
+
   const filtered = useMemo(() => {
-    if (!search) return files;
+    let base = allFiles;
+    // Backend 'available' endpoint already filters for non-admins correctly
+    if (isAdmin) {
+      // Admins might want to switch back to 'all' mode if needed, 
+      // but for now we follow the 'available' logic.
+    }
+
+    if (!search) return base;
     const q = search.toLowerCase();
-    return files.filter(f =>
-      f.fileNumber.toLowerCase().includes(q) ||
+    return base.filter(f =>
       f.folderNumber.toLowerCase().includes(q) ||
+      f.folderSymbol.toLowerCase().includes(q) ||
       f.createdBy.toLowerCase().includes(q)
     );
-  }, [files, search]);
+  }, [allFiles, search, isAdmin, isSessionClerk, transfers, userName]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
 
   const handleAdd = () => {
     const { success, errors: validationErrors } = validateForm(fileSchema, form, t);
-    if (!success) { setErrors(validationErrors); return; }
-    const newFile: CaseFile = { id: String(files.length + 1), ...form, creationDate: year };
-    setFiles([...files, newFile]);
-    setOpen(false);
-    setForm({ fileNumber: '', folderNumber: '', createdBy: '' });
-    setYear('');
-    setErrors({});
-    toast({ title: t('fileAdded') });
+
+    const currentYear = new Date().getFullYear();
+    const yearNum = Number(year);
+    const customErrors: Record<string, string> = { ...validationErrors };
+    if (year && (isNaN(yearNum) || yearNum < 1950 || yearNum > currentYear)) {
+      customErrors.creationYear = t('invalidYearRange');
+    }
+
+    if (!success || Object.keys(customErrors).length > 0) { setErrors(customErrors); return; }
+
+    // Find the user object for createdBy
+    const creatorUser = users.find(u => `${u.firstName} ${u.lastName}` === form.createdBy);
+
+    const folderData = {
+      folderNumber: form.folderNumber,
+      folderSymbol: form.folderSymbol,
+      statuts: form.statuts,
+      createdAt: year ? `${year}-01-01` : new Date().toISOString().split('T')[0],
+      createdBy: creatorUser ? { userId: Number(creatorUser.id) } : null
+    };
+
+    addFile(folderData, {
+      onSuccess: () => {
+        setOpen(false);
+        setForm({ folderNumber: '', folderSymbol: '', createdBy: '', statuts: 'CREATION' });
+        setYear('');
+        setErrors({});
+        toast({ title: t('fileAdded') });
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
   };
 
   const handleEdit = (file: CaseFile) => {
     setSelectedFile(file);
-    setEditForm({ fileNumber: file.fileNumber, folderNumber: file.folderNumber, createdBy: file.createdBy });
+    setEditForm({
+      folderNumber: file.folderNumber,
+      folderSymbol: file.folderSymbol,
+      createdBy: file.createdBy,
+      statuts: file.statuts || 'CREATION'
+    });
     setEditYear(file.creationDate ? file.creationDate.substring(0, 4) : '');
     setEditErrors({});
     setEditOpen(true);
@@ -83,12 +138,36 @@ const FilesPage = () => {
   const handleEditSave = () => {
     if (!selectedFile) return;
     const { success, errors: validationErrors } = validateForm(fileSchema, editForm, t);
-    if (!success) { setEditErrors(validationErrors); return; }
-    setFiles(files.map(f => f.id === selectedFile.id ? { ...f, ...editForm, creationDate: editYear || f.creationDate } : f));
-    setEditOpen(false);
-    setSelectedFile(null);
-    setEditErrors({});
-    toast({ title: t('fileUpdated') });
+
+    const currentYear = new Date().getFullYear();
+    const yearNum = Number(editYear);
+    const customErrors: Record<string, string> = { ...validationErrors };
+    if (editYear && (isNaN(yearNum) || yearNum < 1950 || yearNum > currentYear)) {
+      customErrors.creationYear = t('invalidYearRange');
+    }
+
+    if (!success || Object.keys(customErrors).length > 0) { setEditErrors(customErrors); return; }
+
+    // Find the user object for createdBy
+    const creatorUser = users.find(u => `${u.firstName} ${u.lastName}` === editForm.createdBy);
+
+    const folderData = {
+      folderNumber: editForm.folderNumber,
+      folderSymbol: editForm.folderSymbol,
+      statuts: editForm.statuts,
+      createdAt: editYear ? `${editYear}-01-01` : selectedFile.creationDate,
+      createdBy: creatorUser ? { userId: Number(creatorUser.id) } : null
+    };
+
+    updateFile({ id: selectedFile.id, folder: folderData }, {
+      onSuccess: () => {
+        setEditOpen(false);
+        setSelectedFile(null);
+        setEditErrors({});
+        toast({ title: t('fileUpdated') });
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
   };
 
   const handleDeleteClick = (file: CaseFile) => {
@@ -98,10 +177,26 @@ const FilesPage = () => {
 
   const handleDeleteConfirm = () => {
     if (!selectedFile) return;
-    setFiles(files.filter(f => f.id !== selectedFile.id));
-    setDeleteOpen(false);
-    setSelectedFile(null);
-    toast({ title: t('fileDeleted') });
+    deleteFile(selectedFile.id, {
+      onSuccess: () => {
+        setDeleteOpen(false);
+        setSelectedFile(null);
+        toast({ title: t('fileDeleted') });
+      },
+      onError: () => toast({ title: t('error'), variant: 'destructive' })
+    });
+  };
+
+  const statusBadge = (s?: string) => {
+    if (!s) return null;
+    const variants: Record<string, string> = {
+      CREATION: 'bg-info/10 text-info border-info/20',
+      IN_SESSION: 'bg-warning/10 text-warning border-warning/20',
+      IN_DELIBERATION: 'bg-primary/10 text-primary border-primary/20',
+      DRAFTED: 'bg-success/10 text-success border-success/20',
+      ARCHIVED: 'bg-muted text-muted-foreground border-border',
+    };
+    return <Badge variant="outline" className={variants[s] || variants.CREATION}>{t(s)}</Badge>;
   };
 
   const FieldError = ({ error }: { error?: string }) => error ? <p className="text-xs text-destructive mt-1">{error}</p> : null;
@@ -118,19 +213,19 @@ const FilesPage = () => {
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => {
                 const headers = [
-                  { key: 'fileNumber', label: t('fileNumber') }, { key: 'folderNumber', label: t('folderNumber') },
+                  { key: 'folderNumber', label: t('fileNumber') }, { key: 'folderSymbol', label: t('folderSymbol') },
                   { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationYear') },
                 ];
                 exportToCSV(filtered as unknown as Record<string, string>[], headers, 'files');
               }}>
                 <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
+              <DropdownMenuItem onClick={async () => {
                 const headers = [
-                  { key: 'fileNumber', label: t('fileNumber') }, { key: 'folderNumber', label: t('folderNumber') },
+                  { key: 'folderNumber', label: t('fileNumber') }, { key: 'folderSymbol', label: t('folderSymbol') },
                   { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationYear') },
                 ];
-                exportToPDF(filtered as unknown as Record<string, string>[], headers, 'files', t('fileManagement'));
+                await exportToPDF(filtered as unknown as Record<string, string>[], headers, 'files', t('fileManagement'));
               }}>
                 <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
               </DropdownMenuItem>
@@ -141,24 +236,27 @@ const FilesPage = () => {
               <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addFile')}</Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
-              <DialogHeader><DialogTitle>{t('addFile')}</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <DialogTitle>{t('addFile')}</DialogTitle>
+                <DialogDescription className="sr-only">{t('addFile')}</DialogDescription>
+              </DialogHeader>
               <div className="space-y-3">
                 <div className="space-y-1">
                   <Label>{t('fileNumber')}</Label>
-                  <Input value={form.fileNumber} onChange={(e) => setForm({ ...form, fileNumber: e.target.value })} className={errors.fileNumber ? 'border-destructive' : ''} />
-                  <FieldError error={errors.fileNumber} />
-                </div>
-                <div className="space-y-1">
-                  <Label>{t('folderNumber')}</Label>
                   <Input value={form.folderNumber} onChange={(e) => setForm({ ...form, folderNumber: e.target.value })} className={errors.folderNumber ? 'border-destructive' : ''} />
                   <FieldError error={errors.folderNumber} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('folderSymbol')}</Label>
+                  <Input value={form.folderSymbol} onChange={(e) => setForm({ ...form, folderSymbol: e.target.value })} className={errors.folderSymbol ? 'border-destructive' : ''} />
+                  <FieldError error={errors.folderSymbol} />
                 </div>
                 <div className="space-y-1">
                   <Label>{t('createdBy')}</Label>
                   <Select value={form.createdBy} onValueChange={(v) => setForm({ ...form, createdBy: v })}>
                     <SelectTrigger className={errors.createdBy ? 'border-destructive' : ''}><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
                     <SelectContent>
-                      {mockUsers.map((u) => (
+                      {users.map((u) => (
                         <SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>
                       ))}
                     </SelectContent>
@@ -169,12 +267,14 @@ const FilesPage = () => {
                   <Label>{t('creationYear')}</Label>
                   <Input
                     type="number"
-                    min="1900"
-                    max="2099"
+                    min="1950"
+                    max={new Date().getFullYear()}
                     placeholder={t('creationYear')}
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
+                    className={errors.creationYear ? 'border-destructive' : ''}
                   />
+                  <FieldError error={errors.creationYear} />
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
@@ -189,24 +289,27 @@ const FilesPage = () => {
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditErrors({}); }}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{t('editFile')}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{t('editFile')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('editFile')}</DialogDescription>
+          </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
               <Label>{t('fileNumber')}</Label>
-              <Input value={editForm.fileNumber} onChange={(e) => setEditForm({ ...editForm, fileNumber: e.target.value })} className={editErrors.fileNumber ? 'border-destructive' : ''} />
-              <FieldError error={editErrors.fileNumber} />
-            </div>
-            <div className="space-y-1">
-              <Label>{t('folderNumber')}</Label>
               <Input value={editForm.folderNumber} onChange={(e) => setEditForm({ ...editForm, folderNumber: e.target.value })} className={editErrors.folderNumber ? 'border-destructive' : ''} />
               <FieldError error={editErrors.folderNumber} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('folderSymbol')}</Label>
+              <Input value={editForm.folderSymbol} onChange={(e) => setEditForm({ ...editForm, folderSymbol: e.target.value })} className={editErrors.folderSymbol ? 'border-destructive' : ''} />
+              <FieldError error={editErrors.folderSymbol} />
             </div>
             <div className="space-y-1">
               <Label>{t('createdBy')}</Label>
               <Select value={editForm.createdBy} onValueChange={(v) => setEditForm({ ...editForm, createdBy: v })}>
                 <SelectTrigger className={editErrors.createdBy ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {mockUsers.map((u) => (
+                  {users.map((u) => (
                     <SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>
                   ))}
                 </SelectContent>
@@ -214,15 +317,30 @@ const FilesPage = () => {
               <FieldError error={editErrors.createdBy} />
             </div>
             <div className="space-y-1">
+              <Label>{t('status')}</Label>
+              <Select value={editForm.statuts} onValueChange={(v) => setEditForm({ ...editForm, statuts: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CREATION">{t('CREATION')}</SelectItem>
+                  <SelectItem value="IN_SESSION">{t('IN_SESSION')}</SelectItem>
+                  <SelectItem value="IN_DELIBERATION">{t('IN_DELIBERATION')}</SelectItem>
+                  <SelectItem value="DRAFTED">{t('DRAFTED')}</SelectItem>
+                  <SelectItem value="ARCHIVED">{t('ARCHIVED')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
               <Label>{t('creationYear')}</Label>
               <Input
                 type="number"
-                min="1900"
-                max="2099"
+                min="1950"
+                max={new Date().getFullYear()}
                 placeholder={t('creationYear')}
                 value={editYear}
                 onChange={(e) => setEditYear(e.target.value)}
+                className={editErrors.creationYear ? 'border-destructive' : ''}
               />
+              <FieldError error={editErrors.creationYear} />
             </div>
             <div className="flex gap-2 pt-2">
               <Button onClick={handleEditSave} className="flex-1">{t('save')}</Button>
@@ -253,14 +371,20 @@ const FilesPage = () => {
       </div>
 
       <Card className="border-border shadow-sm">
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="p-0 overflow-x-auto relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t('fileNumber')}</TableHead>
-                <TableHead>{t('folderNumber')}</TableHead>
+                <TableHead>{t('folderSymbol')}</TableHead>
                 <TableHead>{t('createdBy')}</TableHead>
                 <TableHead>{t('creationYear')}</TableHead>
+                <TableHead>{t('status')}</TableHead>
                 <TableHead>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -269,10 +393,11 @@ const FilesPage = () => {
                 <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">{t('noData')}</TableCell></TableRow>
               ) : paginated.map((file) => (
                 <TableRow key={file.id}>
-                  <TableCell className="font-medium">{file.fileNumber}</TableCell>
-                  <TableCell>{file.folderNumber}</TableCell>
+                  <TableCell className="font-medium">{file.folderNumber}</TableCell>
+                  <TableCell>{file.folderSymbol}</TableCell>
                   <TableCell>{file.createdBy}</TableCell>
                   <TableCell>{file.creationDate}</TableCell>
+                  <TableCell>{statusBadge(file.statuts)}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(file)}><Pencil className="w-4 h-4" /></Button>
@@ -286,9 +411,24 @@ const FilesPage = () => {
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{t('showing')} {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} {t('of')} {filtered.length}</p>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+        <p className="text-sm text-muted-foreground">
+          {t('showing')} {filtered.length > 0 ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filtered.length)} {t('of')} {filtered.length}
+        </p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t('itemsPerPage')}</span>
+            <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+              <SelectTrigger className="w-16 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
             {Array.from({ length: totalPages }, (_, i) => (
@@ -297,7 +437,7 @@ const FilesPage = () => {
             <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

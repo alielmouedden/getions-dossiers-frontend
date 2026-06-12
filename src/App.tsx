@@ -26,19 +26,19 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route element={<MainLayout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/users" element={<ProtectedRoute allowedRoles={['admin']}><UsersPage /></ProtectedRoute>} />
-              <Route path="/files" element={<FilesPage />} />
-              <Route path="/transfers" element={<ProtectedRoute allowedRoles={['admin']}><TransfersPage /></ProtectedRoute>} />
-              <Route path="/my-transfers" element={<MyTransfersPage />} />
-              <Route path="/refer-file" element={<ReferFilePage />} />
-              <Route path="/system-logs" element={<ProtectedRoute allowedRoles={['admin']}><SystemLogsPage /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><DashboardPage /></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><UsersPage /></ProtectedRoute>} />
+              <Route path="/files" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'clerk']}><FilesPage /></ProtectedRoute>} />
+              <Route path="/transfers" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><TransfersPage /></ProtectedRoute>} />
+              <Route path="/my-transfers" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'clerk', 'session_clerk']}><MyTransfersPage /></ProtectedRoute>} />
+              <Route path="/refer-file" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'clerk', 'session_clerk']}><ReferFilePage /></ProtectedRoute>} />
+              <Route path="/system-logs" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><SystemLogsPage /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -38,32 +38,34 @@ const mockLogs: SystemLog[] = [
   { id: '15', user: 'أحمد محمدي', action: 'logout', target: '-', details: 'تسجيل خروج', timestamp: '2024-05-10 16:00:00', type: 'logout' },
 ];
 
-const PAGE_SIZE = 4;
+import { useLogs } from '@/hooks/use-api';
 
 const SystemLogsPage = () => {
   const { t } = useTranslation();
+  const { logs, isLoading } = useLogs();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   const filtered = useMemo(() => {
-    let result = mockLogs;
+    let result = (logs as any[]) || [];
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(log =>
-        log.user.toLowerCase().includes(q) ||
-        log.target.toLowerCase().includes(q) ||
-        log.details.toLowerCase().includes(q)
+        (log.user || '').toLowerCase().includes(q) ||
+        (log.target || '').toLowerCase().includes(q) ||
+        (log.details || '').toLowerCase().includes(q)
       );
     }
     if (typeFilter !== 'all') {
       result = result.filter(log => log.type === typeFilter);
     }
     return result;
-  }, [search, typeFilter]);
+  }, [logs, search, typeFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
   const handleTypeFilter = (val: string) => { setTypeFilter(val); setPage(1); };
@@ -100,11 +102,16 @@ const SystemLogsPage = () => {
   const exportHeaders = [
     { key: 'id', label: '#' },
     { key: 'user', label: t('logUser') },
-    { key: 'action', label: t('logAction') },
+    { key: 'actionTrans', label: t('logAction') },
     { key: 'target', label: t('logTarget') },
     { key: 'details', label: t('logDetails') },
     { key: 'timestamp', label: t('logTimestamp') },
   ];
+
+  const getTranslatedLogs = () => filtered.map(log => ({
+    ...log,
+    actionTrans: t(`logType_${log.type}`)
+  }));
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -115,10 +122,10 @@ const SystemLogsPage = () => {
             <Button variant="outline" className="gap-2"><Download className="w-4 h-4" /> {t('export')}</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => exportToCSV(filtered as unknown as Record<string, string>[], exportHeaders, 'system-logs')}>
+            <DropdownMenuItem onClick={() => exportToCSV(getTranslatedLogs() as unknown as Record<string, string>[], exportHeaders, 'system-logs')}>
               <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => exportToPDF(filtered as unknown as Record<string, string>[], exportHeaders, 'system-logs', t('systemLogs'))}>
+            <DropdownMenuItem onClick={async () => await exportToPDF(getTranslatedLogs() as unknown as Record<string, string>[], exportHeaders, 'system-logs', t('systemLogs'))}>
               <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -175,9 +182,24 @@ const SystemLogsPage = () => {
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{t('showing')} {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} {t('of')} {filtered.length}</p>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+        <p className="text-sm text-muted-foreground">
+          {t('showing')} {filtered.length > 0 ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filtered.length)} {t('of')} {filtered.length}
+        </p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t('itemsPerPage')}</span>
+            <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+              <SelectTrigger className="w-16 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
             {Array.from({ length: totalPages }, (_, i) => (
@@ -186,7 +208,7 @@ const SystemLogsPage = () => {
             <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
