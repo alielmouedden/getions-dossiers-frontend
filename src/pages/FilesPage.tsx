@@ -51,10 +51,16 @@ const FilesPage = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [form, setForm] = useState({ folderNumber: '', folderSymbol: '', createdBy: '', statuts: 'CREATION' });
+  const [form, setForm] = useState({ folderNumber: '', folderSymbol: '', createdBy: userName, statuts: 'CREATION' });
   const [editForm, setEditForm] = useState({ folderNumber: '', folderSymbol: '', createdBy: '', statuts: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (userName && !form.createdBy) {
+      setForm(prev => ({ ...prev, createdBy: userName }));
+    }
+  }, [userName, form.createdBy]);
 
   // Sync search from URL
   useEffect(() => {
@@ -118,7 +124,17 @@ const FilesPage = () => {
         setErrors({});
         toast({ title: t('fileAdded') });
       },
-      onError: () => toast({ title: t('error'), variant: 'destructive' })
+      onError: (error: any) => {
+        const errorMsg = error.message || '';
+        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
+          ? t('requestTransferNotFound')
+          : t(errorMsg);
+        toast({
+          title: t('error'),
+          description: displayMsg,
+          variant: 'destructive'
+        });
+      }
     });
   };
 
@@ -166,7 +182,17 @@ const FilesPage = () => {
         setEditErrors({});
         toast({ title: t('fileUpdated') });
       },
-      onError: () => toast({ title: t('error'), variant: 'destructive' })
+      onError: (error: any) => {
+        const errorMsg = error.message || '';
+        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
+          ? t('requestTransferNotFound')
+          : t(errorMsg);
+        toast({
+          title: t('error'),
+          description: displayMsg,
+          variant: 'destructive'
+        });
+      }
     });
   };
 
@@ -183,7 +209,17 @@ const FilesPage = () => {
         setSelectedFile(null);
         toast({ title: t('fileDeleted') });
       },
-      onError: () => toast({ title: t('error'), variant: 'destructive' })
+      onError: (error: any) => {
+        const errorMsg = error.message || '';
+        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
+          ? t('requestTransferNotFound')
+          : t(errorMsg);
+        toast({
+          title: t('error'),
+          description: displayMsg,
+          variant: 'destructive'
+        });
+      }
     });
   };
 
@@ -231,7 +267,14 @@ const FilesPage = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setErrors({}); }}>
+          <Dialog open={open} onOpenChange={(v) => {
+            setOpen(v);
+            if (v) {
+              setForm(prev => ({ ...prev, createdBy: userName }));
+            } else {
+              setErrors({});
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="gap-2"><Plus className="w-4 h-4" /> {t('addFile')}</Button>
             </DialogTrigger>
@@ -253,14 +296,7 @@ const FilesPage = () => {
                 </div>
                 <div className="space-y-1">
                   <Label>{t('createdBy')}</Label>
-                  <Select value={form.createdBy} onValueChange={(v) => setForm({ ...form, createdBy: v })}>
-                    <SelectTrigger className={errors.createdBy ? 'border-destructive' : ''}><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
-                    <SelectContent>
-                      {users.map((u) => (
-                        <SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input value={form.createdBy} disabled className="bg-muted text-muted-foreground cursor-not-allowed" />
                   <FieldError error={errors.createdBy} />
                 </div>
                 <div className="space-y-1">
@@ -306,14 +342,7 @@ const FilesPage = () => {
             </div>
             <div className="space-y-1">
               <Label>{t('createdBy')}</Label>
-              <Select value={editForm.createdBy} onValueChange={(v) => setEditForm({ ...editForm, createdBy: v })}>
-                <SelectTrigger className={editErrors.createdBy ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {users.map((u) => (
-                    <SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input value={editForm.createdBy} disabled className="bg-muted text-muted-foreground cursor-not-allowed" />
               <FieldError error={editErrors.createdBy} />
             </div>
             <div className="space-y-1">

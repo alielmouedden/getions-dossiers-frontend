@@ -179,5 +179,17 @@
   "Only SESSION_CLERK can change folder status": "فقط كاتب الجلسة يمكنه تغيير حالة الملف.",
   "User must be authenticated": "يجب تسجيل الدخول أولاً.",
   "User must be authenticated to create a folder": "يجب تسجيل الدخول لإنشاء ملف.",
-  "folderNotFound": "الملف المطلوب غير موجود."
+  "folderNotFound": "الملف المطلوب غير موجود.",
+  "Folder must be DRAFTED to request transfer": "يجب أن يكون الملف في حالة 'تم التحرير' لطلب الإحالة.",
+  "Folder not found": "الملف غير موجود.",
+  "Handler not found": "المستلم غير موجود.",
+  "Current user not found": "المستخدم الحالي غير موجود.",
+  "Status must be ACCEPTED or REJECTED": "الحالة يجب أن تكون مقبولة أو مرفوضة.",
+  "requestTransferNotFound": "طلب الإحالة غير موجود.",
+  "Folder is required for transfer": "الملف مطلوب لإجراء الإحالة.",
+  "User must be authenticated to transfer a folder": "يجب تسجيل الدخول لإجراء إحالة الملف.",
+  "Only the folder creator can perform the first transfer": "فقط منشئ الملف يمكنه إجراء أول إحالة.",
+  "You do not currently hold this dossier": "أنت لا تحوز هذا الملف حالياً.",
+  "Dossier must be confirmed as 'Received' before you can transfer it": "يجب تأكيد استلام الملف أولاً قبل إحالته.",
+  "Transfer not found": "الإحالة غير موجودة."
 }

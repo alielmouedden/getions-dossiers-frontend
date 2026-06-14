@@ -52,7 +52,17 @@ const ReferFilePage = () => {
         toast({ title: t('transferAdded') });
         navigate('/my-transfers');
       },
-      onError: () => toast({ title: t('error'), variant: 'destructive' })
+      onError: (error: any) => {
+        const errorMsg = error.message || '';
+        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
+          ? t('requestTransferNotFound')
+          : t(errorMsg);
+        toast({
+          title: t('error'),
+          description: displayMsg,
+          variant: 'destructive'
+        });
+      }
     });
   };
 

@@ -68,7 +68,17 @@ const MyTransfersPage = () => {
       transfer: { ...tr, status: newStatus.toUpperCase() } 
     }, {
       onSuccess: () => toast({ title: t('transferUpdated') }),
-      onError: () => toast({ title: t('error'), variant: 'destructive' })
+      onError: (error: any) => {
+        const errorMsg = error.message || '';
+        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
+          ? t('requestTransferNotFound')
+          : t(errorMsg);
+        toast({
+          title: t('error'),
+          description: displayMsg,
+          variant: 'destructive'
+        });
+      }
     });
   };
 

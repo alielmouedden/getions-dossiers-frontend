@@ -37,7 +37,7 @@ const App = () => (
               <Route path="/files" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'clerk']}><FilesPage /></ProtectedRoute>} />
               <Route path="/transfers" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><TransfersPage /></ProtectedRoute>} />
               <Route path="/my-transfers" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'clerk', 'session_clerk']}><MyTransfersPage /></ProtectedRoute>} />
-              <Route path="/refer-file" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'clerk', 'session_clerk']}><ReferFilePage /></ProtectedRoute>} />
+              <Route path="/refer-file" element={<ProtectedRoute allowedRoles={['clerk', 'session_clerk']}><ReferFilePage /></ProtectedRoute>} />
               <Route path="/system-logs" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><SystemLogsPage /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />

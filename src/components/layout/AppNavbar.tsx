@@ -173,7 +173,6 @@ export const AppNavbar = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-              {user?.username}
             <DropdownMenuItem onClick={onLogout} className="gap-2 text-destructive">
               <LogOut className="w-4 h-4" />
               {t('logout')}

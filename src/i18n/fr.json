@@ -179,5 +179,17 @@
   "Only SESSION_CLERK can change folder status": "Seul le greffier d'audience peut modifier le statut du dossier.",
   "User must be authenticated": "L'utilisateur doit être authentifié.",
   "User must be authenticated to create a folder": "L'utilisateur doit être authentifié pour créer un dossier.",
-  "folderNotFound": "Le dossier demandé est introuvable."
+  "folderNotFound": "Le dossier demandé est introuvable.",
+  "Folder must be DRAFTED to request transfer": "Le dossier doit être au statut 'Rédigé' (DRAFTED) pour demander un transfert.",
+  "Folder not found": "Dossier non trouvé.",
+  "Handler not found": "Destinataire non trouvé.",
+  "Current user not found": "Utilisateur actuel non trouvé.",
+  "Status must be ACCEPTED or REJECTED": "Le statut doit être ACCEPTÉ ou REFUSÉ.",
+  "requestTransferNotFound": "Demande de transfert non trouvée.",
+  "Folder is required for transfer": "Le dossier est requis pour le transfert.",
+  "User must be authenticated to transfer a folder": "L'utilisateur doit être authentifié pour transférer un dossier.",
+  "Only the folder creator can perform the first transfer": "Seul le créateur du dossier peut effectuer le premier transfert.",
+  "You do not currently hold this dossier": "Vous ne détenez pas actuellement ce dossier.",
+  "Dossier must be confirmed as 'Received' before you can transfer it": "Le dossier doit être confirmé comme 'Reçu' avant de pouvoir le transférer.",
+  "Transfer not found": "Transfert non trouvé."
 }

@@ -16,7 +16,7 @@ const menuItems = [
   { key: 'fileManagement', icon: FolderOpen, path: '/files', roles: ['admin', 'manager', 'clerk'] },
   { key: 'transferManagement', icon: ArrowRightLeft, path: '/transfers', roles: ['admin', 'manager'] },
   { key: 'myTransfersLog', icon: ClipboardList, path: '/my-transfers', roles: ['admin', 'manager', 'clerk', 'session_clerk'] },
-  { key: 'referFile', icon: Send, path: '/refer-file', roles: ['admin', 'manager', 'clerk', 'session_clerk'] },
+  { key: 'referFile', icon: Send, path: '/refer-file', roles: ['clerk', 'session_clerk'] },
   { key: 'systemLogs', icon: ScrollText, path: '/system-logs', roles: ['admin', 'manager'] },
 ];
 
@@ -30,7 +30,7 @@ export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
                 
   const userRolesMapped = roles.flatMap(role => {
     if (role === 'manager' || role === 'admin') {
-      return ['admin', 'manager', 'clerk', 'session_clerk', 'archive_officer'];
+      return ['admin', 'manager'];
     }
     return [role];
   });
