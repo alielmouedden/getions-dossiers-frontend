@@ -252,7 +252,7 @@ const DashboardPage = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>{t('fileNumber')}</TableHead>
-                <TableHead>{t('folderNumber')}</TableHead>
+                <TableHead>{t('folderSymbol')}</TableHead>
                 <TableHead>{t('createdBy')}</TableHead>
                 <TableHead>{t('creationDate')}</TableHead>
               </TableRow>
