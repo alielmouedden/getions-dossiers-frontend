@@ -31,4 +31,11 @@ export interface Transfer {
   fileId: string;
   status: TransferStatus;
   date: string;
+  folder?: {
+    folderId: number;
+    folderSymbol: string;
+    folderNumber: string;
+    statuts: string;
+    createdAt?: string;
+  };
 }

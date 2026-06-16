@@ -52,6 +52,7 @@
   "editUser": "تعديل المستخدم",
   "editFile": "تعديل الملف",
   "editTransfer": "تعديل التحويل",
+  "fileIdentifier": "معرف الملف",
   "fileNumber": "رقم الملف",
   "folderSymbol": "رمز الملف",
   "createdBy": "أنشئ بواسطة",

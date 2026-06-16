@@ -51,11 +51,26 @@ const TransfersPage = () => {
     let result = transfers;
     if (search) {
       const q = search.toLowerCase();
-      result = result.filter(tr =>
-        tr.fromUser.toLowerCase().includes(q) ||
-        tr.toUser.toLowerCase().includes(q) ||
-        tr.fileId.toLowerCase().includes(q)
-      );
+      result = result.filter(tr => {
+        const fromUser = tr.fromUser || '';
+        const toUser = tr.toUser || '';
+        const fileId = tr.fileId || '';
+        
+        let folderIdentifier = fileId;
+        if (tr.folder) {
+          const fn = tr.folder.folderNumber || '';
+          const fs = tr.folder.folderSymbol || '';
+          const year = tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : '';
+          folderIdentifier = `${fn}/${fs}/${year}`;
+        }
+        
+        return (
+          fromUser.toLowerCase().includes(q) ||
+          toUser.toLowerCase().includes(q) ||
+          fileId.toLowerCase().includes(q) ||
+          folderIdentifier.toLowerCase().includes(q)
+        );
+      });
     }
     if (statusFilter !== 'all') {
       result = result.filter(tr => tr.status === statusFilter.toLowerCase());
@@ -214,7 +229,8 @@ const TransfersPage = () => {
                 ];
                 const translatedData = filtered.map(tr => ({
                   ...tr,
-                  statusTrans: t(tr.status.toLowerCase())
+                  statusTrans: t(tr.status.toLowerCase()),
+                  fileId: tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : ''}` : tr.fileId
                 }));
                 exportToCSV(translatedData as unknown as Record<string, string>[], headers, 'transfers');
               }}>
@@ -228,7 +244,8 @@ const TransfersPage = () => {
                 ];
                 const translatedData = filtered.map(tr => ({
                   ...tr,
-                  statusTrans: t(tr.status.toLowerCase())
+                  statusTrans: t(tr.status.toLowerCase()),
+                  fileId: tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : ''}` : tr.fileId
                 }));
                 await exportToPDF(translatedData as unknown as Record<string, string>[], headers, 'transfers', t('transferManagement'));
               }}>
@@ -250,7 +267,7 @@ const TransfersPage = () => {
                   <Label>{t('selectFile')}</Label>
                   <Select value={form.fileId} onValueChange={(v) => setForm({ ...form, fileId: v })}>
                     <SelectTrigger className={errors.fileId ? 'border-destructive' : ''}><SelectValue placeholder={t('selectFile')} /></SelectTrigger>
-                    <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{f.folderNumber}</SelectItem>))}</SelectContent>
+                    <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{`${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`}</SelectItem>))}</SelectContent>
                   </Select>
                   <FieldError error={errors.fileId} />
                 </div>
@@ -304,7 +321,7 @@ const TransfersPage = () => {
               <Label>{t('selectFile')}</Label>
               <Select value={editForm.fileId} onValueChange={(v) => setEditForm({ ...editForm, fileId: v })}>
                 <SelectTrigger className={editErrors.fileId ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{f.folderNumber}</SelectItem>))}</SelectContent>
+                <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{`${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`}</SelectItem>))}</SelectContent>
               </Select>
               <FieldError error={editErrors.fileId} />
             </div>
@@ -397,7 +414,7 @@ const TransfersPage = () => {
                   <TableCell className="font-medium">#{tr.id}</TableCell>
                   <TableCell>{tr.fromUser}</TableCell>
                   <TableCell>{tr.toUser}</TableCell>
-                  <TableCell>{tr.fileId}</TableCell>
+                  <TableCell>{tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : ''}` : tr.fileId}</TableCell>
                   <TableCell>{statusBadge(tr.status)}</TableCell>
                   <TableCell>{tr.date}</TableCell>
                   <TableCell>

@@ -87,7 +87,9 @@ const ReferFilePage = () => {
               </SelectTrigger>
               <SelectContent>
                 {files.map((f) => (
-                  <SelectItem key={f.id} value={f.folderNumber}>{f.folderNumber}</SelectItem>
+                  <SelectItem key={f.id} value={f.folderNumber}>
+                    {`${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

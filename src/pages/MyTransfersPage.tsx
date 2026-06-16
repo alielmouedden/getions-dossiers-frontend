@@ -43,11 +43,26 @@ const MyTransfersPage = () => {
     let result = base;
     if (search) {
       const q = search.toLowerCase();
-      result = result.filter(tr =>
-        tr.fromUser.toLowerCase().includes(q) ||
-        tr.toUser.toLowerCase().includes(q) ||
-        tr.fileId.toLowerCase().includes(q)
-      );
+      result = result.filter(tr => {
+        const fromUser = tr.fromUser || '';
+        const toUser = tr.toUser || '';
+        const fileId = tr.fileId || '';
+        
+        let folderIdentifier = fileId;
+        if (tr.folder) {
+          const fn = tr.folder.folderNumber || '';
+          const fs = tr.folder.folderSymbol || '';
+          const year = tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : '';
+          folderIdentifier = `${fn}/${fs}/${year}`;
+        }
+        
+        return (
+          fromUser.toLowerCase().includes(q) ||
+          toUser.toLowerCase().includes(q) ||
+          fileId.toLowerCase().includes(q) ||
+          folderIdentifier.toLowerCase().includes(q)
+        );
+      });
     }
     if (statusFilter !== 'all') {
       result = result.filter(tr => tr.status === statusFilter);
@@ -103,7 +118,8 @@ const MyTransfersPage = () => {
 
   const getTranslatedTransfers = () => myTransfers.map(tr => ({
     ...tr,
-    statusTrans: t(tr.status.toLowerCase())
+    statusTrans: t(tr.status.toLowerCase()),
+    fileId: tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : ''}` : tr.fileId
   }));
 
   if (isLoading) return <div className="flex h-[400px] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -170,7 +186,7 @@ const MyTransfersPage = () => {
                 <TableRow key={tr.id}>
                   <TableCell className="font-medium">#{tr.id}</TableCell>
                   <TableCell>{tab === 'sent' ? tr.toUser : tr.fromUser}</TableCell>
-                  <TableCell>{tr.fileId}</TableCell>
+                  <TableCell>{tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : ''}` : tr.fileId}</TableCell>
                   <TableCell>{statusBadge(tr.status)}</TableCell>
                   <TableCell>{tr.date}</TableCell>
                   {tab === 'received' && (

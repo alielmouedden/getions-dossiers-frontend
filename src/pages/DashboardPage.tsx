@@ -251,19 +251,17 @@ const DashboardPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('fileNumber')}</TableHead>
-                <TableHead>{t('folderSymbol')}</TableHead>
+                <TableHead>{t('fileIdentifier')}</TableHead>
                 <TableHead>{t('createdBy')}</TableHead>
                 <TableHead>{t('creationDate')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {files.length === 0 ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-4 text-muted-foreground">{t('noData')}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={3} className="text-center py-4 text-muted-foreground">{t('noData')}</TableCell></TableRow>
               ) : files.slice(0, 3).map((file, index) => (
                 <TableRow key={file.id || `file-${index}`}>
-                  <TableCell className="font-medium">{file.folderNumber}</TableCell>
-                  <TableCell>{file.folderSymbol}</TableCell>
+                  <TableCell className="font-medium">{`${file.folderNumber}/${file.folderSymbol}/${file.creationDate ? file.creationDate.substring(0, 4) : ''}`}</TableCell>
                   <TableCell>{file.createdBy}</TableCell>
                   <TableCell>{file.creationDate}</TableCell>
                 </TableRow>

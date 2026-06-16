@@ -52,6 +52,7 @@
   "editUser": "Modifier l'utilisateur",
   "editFile": "Modifier le dossier",
   "editTransfer": "Modifier le transfert",
+  "fileIdentifier": "Identifiant de dossier",
   "fileNumber": "Numéro de dossier",
   "folderSymbol": "Symbole de dossier",
   "createdBy": "Créé par",

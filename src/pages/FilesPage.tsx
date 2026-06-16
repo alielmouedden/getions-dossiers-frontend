@@ -81,11 +81,21 @@ const FilesPage = () => {
 
     if (!search) return base;
     const q = search.toLowerCase();
-    return base.filter(f =>
-      f.folderNumber.toLowerCase().includes(q) ||
-      f.folderSymbol.toLowerCase().includes(q) ||
-      f.createdBy.toLowerCase().includes(q)
-    );
+    return base.filter(f => {
+      const folderNumber = f.folderNumber || '';
+      const folderSymbol = f.folderSymbol || '';
+      const year = f.creationDate ? f.creationDate.substring(0, 4) : '';
+      const fullIdentifier = `${folderNumber}/${folderSymbol}/${year}`.toLowerCase();
+      const createdBy = f.createdBy || '';
+      
+      return (
+        folderNumber.toLowerCase().includes(q) ||
+        folderSymbol.toLowerCase().includes(q) ||
+        year.toLowerCase().includes(q) ||
+        fullIdentifier.includes(q) ||
+        createdBy.toLowerCase().includes(q)
+      );
+    });
   }, [allFiles, search, isAdmin, isSessionClerk, transfers, userName]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -249,19 +259,27 @@ const FilesPage = () => {
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => {
                 const headers = [
-                  { key: 'folderNumber', label: t('fileNumber') }, { key: 'folderSymbol', label: t('folderSymbol') },
+                  { key: 'fileIdentifier', label: t('fileIdentifier') },
                   { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationYear') },
                 ];
-                exportToCSV(filtered as unknown as Record<string, string>[], headers, 'files');
+                const exportData = filtered.map(f => ({
+                  ...f,
+                  fileIdentifier: `${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`
+                }));
+                exportToCSV(exportData as unknown as Record<string, string>[], headers, 'files');
               }}>
                 <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={async () => {
                 const headers = [
-                  { key: 'folderNumber', label: t('fileNumber') }, { key: 'folderSymbol', label: t('folderSymbol') },
+                  { key: 'fileIdentifier', label: t('fileIdentifier') },
                   { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationYear') },
                 ];
-                await exportToPDF(filtered as unknown as Record<string, string>[], headers, 'files', t('fileManagement'));
+                const exportData = filtered.map(f => ({
+                  ...f,
+                  fileIdentifier: `${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`
+                }));
+                await exportToPDF(exportData as unknown as Record<string, string>[], headers, 'files', t('fileManagement'));
               }}>
                 <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
               </DropdownMenuItem>
@@ -409,8 +427,7 @@ const FilesPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('fileNumber')}</TableHead>
-                <TableHead>{t('folderSymbol')}</TableHead>
+                <TableHead>{t('fileIdentifier')}</TableHead>
                 <TableHead>{t('createdBy')}</TableHead>
                 <TableHead>{t('creationYear')}</TableHead>
                 <TableHead>{t('status')}</TableHead>
@@ -422,8 +439,7 @@ const FilesPage = () => {
                 <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">{t('noData')}</TableCell></TableRow>
               ) : paginated.map((file) => (
                 <TableRow key={file.id}>
-                  <TableCell className="font-medium">{file.folderNumber}</TableCell>
-                  <TableCell>{file.folderSymbol}</TableCell>
+                  <TableCell className="font-medium">{`${file.folderNumber}/${file.folderSymbol}/${file.creationDate ? file.creationDate.substring(0, 4) : ''}`}</TableCell>
                   <TableCell>{file.createdBy}</TableCell>
                   <TableCell>{file.creationDate}</TableCell>
                   <TableCell>{statusBadge(file.statuts)}</TableCell>
