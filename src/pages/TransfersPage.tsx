@@ -267,7 +267,7 @@ const TransfersPage = () => {
                   <Label>{t('selectFile')}</Label>
                   <Select value={form.fileId} onValueChange={(v) => setForm({ ...form, fileId: v })}>
                     <SelectTrigger className={errors.fileId ? 'border-destructive' : ''}><SelectValue placeholder={t('selectFile')} /></SelectTrigger>
-                    <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{`${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`}</SelectItem>))}</SelectContent>
+                    <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{`${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`}</SelectItem>))}</SelectContent>
                   </Select>
                   <FieldError error={errors.fileId} />
                 </div>
@@ -321,7 +321,7 @@ const TransfersPage = () => {
               <Label>{t('selectFile')}</Label>
               <Select value={editForm.fileId} onValueChange={(v) => setEditForm({ ...editForm, fileId: v })}>
                 <SelectTrigger className={editErrors.fileId ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{`${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`}</SelectItem>))}</SelectContent>
+                <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{`${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`}</SelectItem>))}</SelectContent>
               </Select>
               <FieldError error={editErrors.fileId} />
             </div>

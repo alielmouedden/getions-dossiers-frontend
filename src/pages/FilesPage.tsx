@@ -84,7 +84,7 @@ const FilesPage = () => {
     return base.filter(f => {
       const folderNumber = f.folderNumber || '';
       const folderSymbol = f.folderSymbol || '';
-      const year = f.creationDate ? f.creationDate.substring(0, 4) : '';
+      const year = f.folderYear ? String(f.folderYear) : '';
       const fullIdentifier = `${folderNumber}/${folderSymbol}/${year}`.toLowerCase();
       const createdBy = f.createdBy || '';
       
@@ -122,7 +122,7 @@ const FilesPage = () => {
       folderNumber: form.folderNumber,
       folderSymbol: form.folderSymbol,
       statuts: form.statuts,
-      createdAt: year ? `${year}-01-01` : new Date().toISOString().split('T')[0],
+      folderYear: year ? Number(year) : new Date().getFullYear(),
       createdBy: creatorUser ? { userId: Number(creatorUser.id) } : null
     };
 
@@ -156,7 +156,7 @@ const FilesPage = () => {
       createdBy: file.createdBy,
       statuts: file.statuts || 'CREATION'
     });
-    setEditYear(file.creationDate ? file.creationDate.substring(0, 4) : '');
+    setEditYear(file.folderYear ? String(file.folderYear) : '');
     setEditErrors({});
     setEditOpen(true);
   };
@@ -181,7 +181,7 @@ const FilesPage = () => {
       folderNumber: editForm.folderNumber,
       folderSymbol: editForm.folderSymbol,
       statuts: editForm.statuts,
-      createdAt: editYear ? `${editYear}-01-01` : selectedFile.creationDate,
+      folderYear: editYear ? Number(editYear) : selectedFile.folderYear,
       createdBy: creatorUser ? { userId: Number(creatorUser.id) } : null
     };
 
@@ -260,11 +260,12 @@ const FilesPage = () => {
               <DropdownMenuItem onClick={() => {
                 const headers = [
                   { key: 'fileIdentifier', label: t('fileIdentifier') },
-                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationYear') },
+                  { key: 'createdBy', label: t('createdBy') }, { key: 'folderYear', label: t('creationYear') },
                 ];
                 const exportData = filtered.map(f => ({
                   ...f,
-                  fileIdentifier: `${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`
+                  fileIdentifier: `${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`,
+                  folderYear: f.folderYear || ''
                 }));
                 exportToCSV(exportData as unknown as Record<string, string>[], headers, 'files');
               }}>
@@ -273,11 +274,12 @@ const FilesPage = () => {
               <DropdownMenuItem onClick={async () => {
                 const headers = [
                   { key: 'fileIdentifier', label: t('fileIdentifier') },
-                  { key: 'createdBy', label: t('createdBy') }, { key: 'creationDate', label: t('creationYear') },
+                  { key: 'createdBy', label: t('createdBy') }, { key: 'folderYear', label: t('creationYear') },
                 ];
                 const exportData = filtered.map(f => ({
                   ...f,
-                  fileIdentifier: `${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`
+                  fileIdentifier: `${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`,
+                  folderYear: f.folderYear || ''
                 }));
                 await exportToPDF(exportData as unknown as Record<string, string>[], headers, 'files', t('fileManagement'));
               }}>
@@ -439,9 +441,9 @@ const FilesPage = () => {
                 <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">{t('noData')}</TableCell></TableRow>
               ) : paginated.map((file) => (
                 <TableRow key={file.id}>
-                  <TableCell className="font-medium">{`${file.folderNumber}/${file.folderSymbol}/${file.creationDate ? file.creationDate.substring(0, 4) : ''}`}</TableCell>
+                  <TableCell className="font-medium">{`${file.folderNumber}/${file.folderSymbol}/${file.folderYear || ''}`}</TableCell>
                   <TableCell>{file.createdBy}</TableCell>
-                  <TableCell>{file.creationDate}</TableCell>
+                  <TableCell>{file.folderYear}</TableCell>
                   <TableCell>{statusBadge(file.statuts)}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">

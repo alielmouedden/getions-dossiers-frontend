@@ -19,6 +19,7 @@ export interface CaseFile {
   folderSymbol: string;
   createdBy: string;
   creationDate: string;
+  folderYear?: number;
   statuts?: string;
 }
 

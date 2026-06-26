@@ -261,7 +261,7 @@ const DashboardPage = () => {
                 <TableRow><TableCell colSpan={3} className="text-center py-4 text-muted-foreground">{t('noData')}</TableCell></TableRow>
               ) : files.slice(0, 3).map((file, index) => (
                 <TableRow key={file.id || `file-${index}`}>
-                  <TableCell className="font-medium">{`${file.folderNumber}/${file.folderSymbol}/${file.creationDate ? file.creationDate.substring(0, 4) : ''}`}</TableCell>
+                  <TableCell className="font-medium">{`${file.folderNumber}/${file.folderSymbol}/${file.folderYear || ''}`}</TableCell>
                   <TableCell>{file.createdBy}</TableCell>
                   <TableCell>{file.creationDate}</TableCell>
                 </TableRow>

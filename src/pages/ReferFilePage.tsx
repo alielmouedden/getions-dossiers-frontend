@@ -88,7 +88,7 @@ const ReferFilePage = () => {
               <SelectContent>
                 {files.map((f) => (
                   <SelectItem key={f.id} value={f.folderNumber}>
-                    {`${f.folderNumber}/${f.folderSymbol}/${f.creationDate ? f.creationDate.substring(0, 4) : ''}`}
+                    {`${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`}
                   </SelectItem>
                 ))}
               </SelectContent>
