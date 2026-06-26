@@ -30,7 +30,7 @@ import { Transfer, TransferStatus } from '@/types';
 const TransfersPage = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { transfers, isLoading, addTransfer, updateTransfer, deleteTransfer } = useTransfers('me');
+  const { transfers, isLoading, addTransfer, updateTransfer, deleteTransfer } = useTransfers('all');
   const { users } = useUsers();
   const { files } = useFiles();
   
@@ -210,6 +210,31 @@ const TransfersPage = () => {
   };
 
   const FieldError = ({ error }: { error?: string }) => error ? <p className="text-xs text-destructive mt-1">{error}</p> : null;
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+      if (start > 2) {
+        pages.push('ellipsis-start');
+      }
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      if (end < totalPages - 1) {
+        pages.push('ellipsis-end');
+      }
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -428,35 +453,44 @@ const TransfersPage = () => {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
-
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-        <p className="text-sm text-muted-foreground">
-          {t('showing')} {filtered.length > 0 ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filtered.length)} {t('of')} {filtered.length}
-        </p>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{t('itemsPerPage')}</span>
-            <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
-              <SelectTrigger className="w-16 h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="15">15</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Button key={i + 1} variant={page === i + 1 ? 'default' : 'outline'} size="icon" className="h-8 w-8" onClick={() => setPage(i + 1)}>{i + 1}</Button>
-            ))}
-            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
+        <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground">
+            {t('showing')} {filtered.length > 0 ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filtered.length)} {t('of')} {filtered.length}
+          </p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{t('itemsPerPage')}</span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-16 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="15">15</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
+              {getPageNumbers().map((p, idx) => {
+                if (p === 'ellipsis-start' || p === 'ellipsis-end') {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground select-none">
+                      ...
+                    </span>
+                  );
+                }
+                const pageNum = p as number;
+                return (
+                  <Button key={pageNum} variant={page === pageNum ? 'default' : 'outline'} size="icon" className="h-8 w-8" onClick={() => setPage(pageNum)}>{pageNum}</Button>
+                );
+              })}
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
+            </div>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

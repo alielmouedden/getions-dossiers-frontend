@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, ClipboardList, Send, ScrollText, X, Scale } from 'lucide-react';
+import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, ClipboardList, Send, ScrollText, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -59,9 +59,14 @@ export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
       >
         {/* Logo area */}
         <div className="h-16 flex items-center gap-3 px-4 border-b border-border shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <Scale className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img 
+            src="/logo.svg" 
+            alt="Justice Hub Logo" 
+            className={cn(
+              "shrink-0 object-contain transition-all duration-300",
+              open ? "h-11 w-auto" : "h-9 w-9"
+            )} 
+          />
           <div className={cn("overflow-hidden transition-all", open ? "w-auto opacity-100" : "w-0 opacity-0")}>
             <p className="text-sm font-semibold text-foreground whitespace-nowrap">{t('ministryTitle')}</p>
             <p className="text-xs text-muted-foreground whitespace-nowrap">{t('platformTitle')}</p>

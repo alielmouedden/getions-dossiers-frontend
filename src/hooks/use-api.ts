@@ -145,12 +145,12 @@ export const useLogs = () => {
   };
 };
 
-export const useRequestTransfers = () => {
+export const useRequestTransfers = (mode: 'all' | 'me' = 'all') => {
   const queryClient = useQueryClient();
 
   const requestsQuery = useQuery({
-    queryKey: ['request-transfers'],
-    queryFn: apiClient.getMyRequestTransfers,
+    queryKey: ['request-transfers', mode],
+    queryFn: () => mode === 'all' ? apiClient.getRequestTransfers() : apiClient.getMyRequestTransfers(),
   });
 
   const confirmMutation = useMutation({

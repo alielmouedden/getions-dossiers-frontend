@@ -99,32 +99,37 @@ export const MiniChat = () => {
 
     const isAr = i18n.language === 'ar';
 
-    if (!isAuthenticated) {
-      setTimeout(() => {
-        const botMessage: Message = {
-          id: Date.now() + 1,
-          text: isAr
-            ? "يرجى تسجيل الدخول أولاً للوصول إلى معلومات الملفات."
-            : "Veuillez vous connecter d'abord pour accéder aux informations des dossiers.",
-          isUser: false,
-        };
-        setMessages((prev) => [...prev, botMessage]);
-      }, 500);
-      return;
-    }
-
     try {
-      const folders = await apiClient.getFolders();
-      const transfers = await apiClient.getTransfers();
+      const parts = userInput.split('/');
+      let match = null;
+      let folderTransfers: any[] = [];
 
-      const cleanInput = userInput.trim().toLowerCase().replace(/\s+/g, '');
-      const match = folders.find((f: any) => {
-        const num = (f.folderNumber || '').toLowerCase().replace(/\s+/g, '');
-        const sym = (f.folderSymbol || '').toLowerCase().replace(/\s+/g, '');
-        const yr = f.folderYear ? String(f.folderYear) : '';
-        const fullId = `${num}/${sym}/${yr}`;
-        return fullId === cleanInput;
-      });
+      if (parts.length === 3) {
+        const num = parts[0].trim();
+        const sym = parts[1].trim();
+        const yr = parseInt(parts[2].trim(), 10);
+
+        if (num && sym && !isNaN(yr)) {
+          try {
+            const res = await apiClient.lookupFolderPublic(num, sym, yr);
+            if (res && res.folder) {
+              match = {
+                ...res.folder,
+                id: String(res.folder.folderId),
+                createdBy: res.folder.createdBy ? `${res.folder.createdBy.firstName} ${res.folder.createdBy.lastName}` : 'System',
+              };
+              folderTransfers = (res.transfers || []).map((t: any) => ({
+                ...t,
+                fromUser: t.fromUser ? `${t.fromUser.firstName} ${t.fromUser.lastName}` : 'System',
+                toUser: t.toUser ? `${t.toUser.firstName} ${t.toUser.lastName}` : 'System',
+                date: t.transferDate
+              }));
+            }
+          } catch (e) {
+            console.error("Public lookup error:", e);
+          }
+        }
+      }
 
       if (!match) {
         setTimeout(() => {
@@ -139,12 +144,6 @@ export const MiniChat = () => {
         }, 500);
         return;
       }
-
-      // Found the folder! Let's find the current holder.
-      const folderTransfers = transfers.filter((t: any) => {
-        return (t.folder && Number(t.folder.folderId) === Number(match.folderId)) || 
-               (t.fileId === match.folderNumber);
-      });
 
       let holderText = '';
       const statusLabel = getStatusLabel(match.statuts || '', isAr);

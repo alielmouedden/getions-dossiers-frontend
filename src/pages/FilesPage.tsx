@@ -49,6 +49,7 @@ const FilesPage = () => {
   const [year, setYear] = useState('');
   const [editYear, setEditYear] = useState('');
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [form, setForm] = useState({ folderNumber: '', folderSymbol: '', createdBy: userName, statuts: 'CREATION' });
@@ -79,6 +80,10 @@ const FilesPage = () => {
       // but for now we follow the 'available' logic.
     }
 
+    if (statusFilter !== 'all') {
+      base = base.filter(f => f.statuts === statusFilter);
+    }
+
     if (!search) return base;
     const q = search.toLowerCase();
     return base.filter(f => {
@@ -96,7 +101,7 @@ const FilesPage = () => {
         createdBy.toLowerCase().includes(q)
       );
     });
-  }, [allFiles, search, isAdmin, isSessionClerk, transfers, userName]);
+  }, [allFiles, search, statusFilter, isAdmin, isSessionClerk, transfers, userName]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -246,6 +251,31 @@ const FilesPage = () => {
   };
 
   const FieldError = ({ error }: { error?: string }) => error ? <p className="text-xs text-destructive mt-1">{error}</p> : null;
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+      if (start > 2) {
+        pages.push('ellipsis-start');
+      }
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      if (end < totalPages - 1) {
+        pages.push('ellipsis-end');
+      }
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -413,11 +443,29 @@ const FilesPage = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder={t('search')} value={search} onChange={(e) => handleSearch(e.target.value)} className="ps-9" />
-      </div>
+      <Card className="border-border shadow-sm">
+        <CardContent className="p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder={t('search')} value={search} onChange={(e) => handleSearch(e.target.value)} className="ps-9 w-full" />
+          </div>
+          <div className="w-full sm:w-48">
+            <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setPage(1); }}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t('filterByStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                <SelectItem value="CREATION">{t('CREATION')}</SelectItem>
+                <SelectItem value="IN_SESSION">{t('IN_SESSION')}</SelectItem>
+                <SelectItem value="IN_DELIBERATION">{t('IN_DELIBERATION')}</SelectItem>
+                <SelectItem value="DRAFTED">{t('DRAFTED')}</SelectItem>
+                <SelectItem value="ARCHIVED">{t('ARCHIVED')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-border shadow-sm">
         <CardContent className="p-0 overflow-x-auto relative">
@@ -456,35 +504,44 @@ const FilesPage = () => {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
-
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-        <p className="text-sm text-muted-foreground">
-          {t('showing')} {filtered.length > 0 ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filtered.length)} {t('of')} {filtered.length}
-        </p>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{t('itemsPerPage')}</span>
-            <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
-              <SelectTrigger className="w-16 h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="15">15</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Button key={i + 1} variant={page === i + 1 ? 'default' : 'outline'} size="icon" className="h-8 w-8" onClick={() => setPage(i + 1)}>{i + 1}</Button>
-            ))}
-            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
+        <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground">
+            {t('showing')} {filtered.length > 0 ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filtered.length)} {t('of')} {filtered.length}
+          </p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{t('itemsPerPage')}</span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-16 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="15">15</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
+              {getPageNumbers().map((p, idx) => {
+                if (p === 'ellipsis-start' || p === 'ellipsis-end') {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground select-none">
+                      ...
+                    </span>
+                  );
+                }
+                const pageNum = p as number;
+                return (
+                  <Button key={pageNum} variant={page === pageNum ? 'default' : 'outline'} size="icon" className="h-8 w-8" onClick={() => setPage(pageNum)}>{pageNum}</Button>
+                );
+              })}
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
+            </div>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

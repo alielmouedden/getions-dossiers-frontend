@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Scale, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,8 +67,8 @@ const LoginPage = () => {
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md border-border shadow-lg">
           <CardHeader className="text-center space-y-4 pb-2">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-md">
-              <Scale className="w-8 h-8 text-primary-foreground" />
+            <div className="mx-auto flex items-center justify-center h-20">
+              <img src="/logo.svg" alt="Justice Hub Logo" className="h-20 w-auto object-contain" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">{t('welcome')}</h1>
@@ -118,8 +118,8 @@ const LoginPage = () => {
       {/* Illustration side - hidden on mobile */}
       <div className="hidden lg:flex flex-1 items-center justify-center bg-accent/50">
         <div className="text-center space-y-6 p-8">
-          <div className="w-32 h-32 mx-auto rounded-3xl bg-primary/10 flex items-center justify-center">
-            <Scale className="w-16 h-16 text-primary" />
+          <div className="mx-auto flex items-center justify-center h-32">
+            <img src="/logo.svg" alt="Justice Hub Logo" className="h-32 w-auto object-contain" />
           </div>
           <div>
             <h2 className="text-3xl font-bold text-foreground">{t('ministryTitle')}</h2>

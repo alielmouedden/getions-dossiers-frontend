@@ -192,5 +192,10 @@
   "Only the folder creator can perform the first transfer": "فقط منشئ الملف يمكنه إجراء أول إحالة.",
   "You do not currently hold this dossier": "أنت لا تحوز هذا الملف حالياً.",
   "Dossier must be confirmed as 'Received' before you can transfer it": "يجب تأكيد استلام الملف أولاً قبل إحالته.",
-  "Transfer not found": "الإحالة غير موجودة."
+  "Transfer not found": "الإحالة غير موجودة.",
+  "foldersByStatus": "الملفات حسب الحالة",
+  "requestsByStatus": "طلبات الإحالة حسب الحالة",
+  "ACCEPTED": "مقبول",
+  "REJECTED": "مرفوض",
+  "PENDING": "قيد الانتظار"
 }

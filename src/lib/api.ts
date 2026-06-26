@@ -103,6 +103,11 @@ export const apiClient = {
       creationDate: f.createdAt,
     }));
   },
+  lookupFolderPublic: async (number: string, symbol: string, year: number) => {
+    const res = await fetch(`${API_BASE_URL}/auth/folders/lookup?number=${encodeURIComponent(number)}&symbol=${encodeURIComponent(symbol)}&year=${year}`);
+    if (!res.ok) throw new Error('Dossier non trouvé');
+    return res.json();
+  },
   getMyFolders: async () => {
     const res = await fetchWithAuth(`${API_BASE_URL}/folders/me`);
     if (!res.ok) throw new Error('Failed to fetch my folders');
@@ -218,6 +223,11 @@ export const apiClient = {
   },
 
   // Request Transfers
+  getRequestTransfers: async () => {
+    const res = await fetchWithAuth(`${API_BASE_URL}/request-transfers`);
+    if (!res.ok) throw new Error('Failed to fetch request transfers');
+    return res.json();
+  },
   getMyRequestTransfers: async () => {
     const res = await fetchWithAuth(`${API_BASE_URL}/request-transfers/me`);
     if (!res.ok) throw new Error('Failed to fetch my request transfers');
