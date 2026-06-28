@@ -30,9 +30,10 @@ export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
   const roles = user?.roles?.map(r => r.replace('ROLE_', '').toLowerCase()) || 
                 (user?.role ? [user.role.toLowerCase()] : []);
 
-  // Derive a display role key (uppercase) that matches i18n keys like MANAGER, CLERK etc.
+  // Derive a display role key that matches i18n keys; MANAGER and ADMIN both show as "admin"
   const rawPrimaryRole = user?.roles?.[0] || user?.role || '';
-  const displayRole = rawPrimaryRole.replace('ROLE_', '').toUpperCase();
+  const normalizedRole = rawPrimaryRole.replace('ROLE_', '').toUpperCase();
+  const displayRole = (normalizedRole === 'MANAGER' || normalizedRole === 'ADMIN') ? 'admin' : normalizedRole;
                 
   const userRolesMapped = roles.flatMap(role => {
     if (role === 'manager' || role === 'admin') {
