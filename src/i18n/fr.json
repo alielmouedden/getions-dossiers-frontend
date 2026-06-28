@@ -212,5 +212,16 @@
   "decisionModalDesc": "Veuillez accepter ou refuser cette demande de transfert de dossier.",
   "decisionSuccess": "Décision enregistrée avec succès",
   "PENDING_TRANSFER_EXISTS": "Une demande de transfert en attente existe déjà pour ce dossier.",
-  "ONLY_PENDING_REQUESTS_CAN_BE_DELETED": "Seules les demandes en attente peuvent être supprimées."
+  "ONLY_PENDING_REQUESTS_CAN_BE_DELETED": "Seules les demandes en attente peuvent être supprimées.",
+  "profile": "Profil",
+  "personalInfo": "Informations personnelles",
+  "security": "Sécurité",
+  "currentPassword": "Mot de passe actuel",
+  "newPassword": "Nouveau mot de passe",
+  "confirmNewPassword": "Confirmer le nouveau mot de passe",
+  "passwordChanged": "Mot de passe modifié avec succès.",
+  "profileUpdated": "Profil mis à jour avec succès.",
+  "passwordsDoNotMatch": "Les mots de passe ne correspondent pas.",
+  "currentPasswordRequired": "Le mot de passe actuel est requis.",
+  "newPasswordRequired": "Le nouveau mot de passe est requis."
 }

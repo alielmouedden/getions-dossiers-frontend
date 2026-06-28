@@ -266,6 +266,21 @@ export const apiClient = {
     return res.json();
   },
 
+  changePassword: async (passwords: any) => {
+    const res = await fetchWithAuth(`${API_BASE_URL}/auth/change-password`, {
+      method: 'POST',
+      body: JSON.stringify(passwords),
+    });
+    if (!res.ok) {
+      let errMsg = 'Failed to change password';
+      try {
+        const errData = await res.json();
+        errMsg = errData.message || errMsg;
+      } catch (_) {}
+      throw new Error(errMsg);
+    }
+  },
+
   // Logs
   getLogs: async () => {
     const res = await fetchWithAuth(`${API_BASE_URL}/logs`);

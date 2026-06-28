@@ -15,6 +15,7 @@ import MyTransfersPage from "./pages/MyTransfersPage";
 import ReferFilePage from "./pages/ReferFilePage";
 import SystemLogsPage from "./pages/SystemLogsPage";
 import TransferHistoryPage from "./pages/TransferHistoryPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -40,7 +41,8 @@ const App = () => (
               <Route path="/my-transfers" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'clerk', 'session_clerk']}><MyTransfersPage /></ProtectedRoute>} />
               <Route path="/refer-file" element={<ProtectedRoute allowedRoles={['clerk', 'session_clerk']}><ReferFilePage /></ProtectedRoute>} />
               <Route path="/system-logs" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><SystemLogsPage /></ProtectedRoute>} />
-              <Route path="/transfer-history" element={<ProtectedRoute allowedRoles={['admin', 'manager']}><TransferHistoryPage /></ProtectedRoute>} />
+              <Route path="/transfer-history" element={<ProtectedRoute allowedRoles={['admin']}><TransferHistoryPage /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute allowedRoles={['admin', 'manager', 'clerk', 'session_clerk']}><ProfilePage /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

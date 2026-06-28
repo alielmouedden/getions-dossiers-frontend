@@ -211,6 +211,17 @@
   "decisionModalTitle": "اتخاذ قرار",
   "decisionModalDesc": "يرجى قبول أو رفض طلب إحالة هذا الملف.",
   "decisionSuccess": "تم تسجيل القرار بنجاح",
-  "PENDING_TRANSFER_EXISTS": "هناك طلب إحالة قيد الانتظار بالفعل لهذا الملف.",
-  "ONLY_PENDING_REQUESTS_CAN_BE_DELETED": "يمكن فقط حذف طلبات الإحالة قيد الانتظار."
+  "PENDING_TRANSFER_EXISTS": "يوجد بالفعل طلب تحويل معلق لهذا الملف.",
+  "ONLY_PENDING_REQUESTS_CAN_BE_DELETED": "يمكن فقط حذف الطلبات المعلقة.",
+  "profile": "الملف الشخصي",
+  "personalInfo": "المعلومات الشخصية",
+  "security": "الأمان",
+  "currentPassword": "كلمة المرور الحالية",
+  "newPassword": "كلمة المرور الجديدة",
+  "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+  "passwordChanged": "تم تغيير كلمة المرور بنجاح.",
+  "profileUpdated": "تم تحديث الملف الشخصي بنجاح.",
+  "passwordsDoNotMatch": "كلمات المرور غير متطابقة.",
+  "currentPasswordRequired": "كلمة المرور الحالية مطلوبة.",
+  "newPasswordRequired": "كلمة المرور الجديدة مطلوبة."
 }

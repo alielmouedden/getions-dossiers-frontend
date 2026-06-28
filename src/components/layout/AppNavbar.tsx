@@ -171,8 +171,13 @@ export const AppNavbar = ({
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onLogout} className="gap-2 text-destructive">
+          <DropdownMenuContent align="end" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            <DropdownMenuItem onClick={() => navigate('/profile')} className="gap-2 cursor-pointer">
+              <User className="w-4 h-4" />
+              {t('profile')}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onLogout} className="gap-2 text-destructive cursor-pointer">
               <LogOut className="w-4 h-4" />
               {t('logout')}
             </DropdownMenuItem>
