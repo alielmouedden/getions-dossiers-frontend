@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -24,7 +25,7 @@ const ReferFilePage = () => {
   const { users, isLoading: usersLoading } = useUsers();
   const { addRequestTransfer } = useRequestTransfers();
   
-  const [form, setForm] = useState({ fileId: '', toUser: '' });
+  const [form, setForm] = useState({ fileId: '', toUser: '', purpose: '' });
   const [open, setOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -54,7 +55,7 @@ const ReferFilePage = () => {
     const requestData = {
       folderId: Number(folder.id),
       handledById: Number(toUser.id),
-      purpose: 'File Referral',
+      purpose: form.purpose || '',
       requestDate: new Date().toISOString().split('T')[0]
     };
 
@@ -180,6 +181,17 @@ const ReferFilePage = () => {
           <div className="space-y-1.5">
             <Label>{t('status')}</Label>
             <Input value={t('pendingReceipt')} disabled className="bg-muted" />
+          </div>
+
+          {/* Purpose (optional comment) */}
+          <div className="space-y-1.5">
+            <Label>{t('purpose')}</Label>
+            <Textarea
+              placeholder={t('purposePlaceholder')}
+              value={form.purpose}
+              onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+              rows={3}
+            />
           </div>
 
           {/* Actions */}

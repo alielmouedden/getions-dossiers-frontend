@@ -385,7 +385,7 @@ const MyTransfersPage = () => {
                 <span className="col-span-2">{selectedRequest.requestDate}</span>
               </div>
               <div className="space-y-1 py-1.5">
-                <span className="font-semibold text-muted-foreground block">{t('logDetails')}:</span>
+                <span className="font-semibold text-muted-foreground block">{t('purpose')}:</span>
                 <span className="block text-foreground bg-accent/40 p-2.5 rounded-md min-h-[40px]">
                   {selectedRequest.purpose || '-'}
                 </span>

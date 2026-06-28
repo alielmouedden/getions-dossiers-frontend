@@ -23,6 +23,7 @@ export const transferSchema = z.object({
   fromUser: z.string().trim().min(1, 'required'),
   toUser: z.string().trim().min(1, 'required'),
   status: z.string().trim().min(1, 'required'),
+  purpose: z.string().optional(),
 });
 
 export function validateForm<T extends Record<string, any>>(

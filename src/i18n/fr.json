@@ -63,6 +63,8 @@
   "toUser": "À l'utilisateur",
   "file": "Dossier",
   "status": "Statut",
+  "purpose": "Motif / Commentaire",
+  "purposePlaceholder": "Saisir le motif du transfert (optionnel)",
   "date": "Date",
   "pending": "En attente",
   "received": "Reçu",

@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -48,7 +49,7 @@ const TransfersPage = () => {
   const [pageSize, setPageSize] = useState(5);
   
   const loggedInName = user ? `${user.firstName} ${user.lastName}` : '';
-  const [form, setForm] = useState({ fromUser: loggedInName, toUser: '', fileId: '', status: 'PENDING' as TransferStatus });
+  const [form, setForm] = useState({ fromUser: loggedInName, toUser: '', fileId: '', status: 'PENDING' as TransferStatus, purpose: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const getErrorMessage = (errorMsg: string) => {
@@ -140,14 +141,14 @@ const TransfersPage = () => {
     const requestData = {
       folderId: Number(folder.id),
       handledById: Number(toUser.id),
-      purpose: 'Admin Transfer',
+      purpose: form.purpose || '',
       requestDate: new Date().toISOString().split('T')[0],
     };
 
     addRequestTransfer(requestData, {
       onSuccess: () => {
         setOpen(false);
-        setForm({ fromUser: loggedInName, toUser: '', fileId: '', status: 'PENDING' });
+        setForm({ fromUser: loggedInName, toUser: '', fileId: '', status: 'PENDING', purpose: '' });
         setErrors({});
         toast({ title: t('transferAdded') });
       },
@@ -348,6 +349,17 @@ const TransfersPage = () => {
                   <Label>{t('status')}</Label>
                   <Input value={t('pending')} disabled className="bg-muted text-muted-foreground" />
                   <FieldError error={errors.status} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('purpose')}</Label>
+                  <Textarea
+                    placeholder={t('purposePlaceholder')}
+                    value={form.purpose}
+                    onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+                    className={errors.purpose ? 'border-destructive' : ''}
+                    rows={3}
+                  />
+                  <FieldError error={errors.purpose} />
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button onClick={handleAdd} className="flex-1">{t('save')}</Button>
