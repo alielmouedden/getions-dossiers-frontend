@@ -15,6 +15,7 @@ import { useFiles, useUsers, useRequestTransfers } from '@/hooks/use-api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { getTransferErrorMessage } from '@/lib/utils';
 
 const ReferFilePage = () => {
   const { t } = useTranslation();
@@ -65,23 +66,9 @@ const ReferFilePage = () => {
         navigate('/my-transfers');
       },
       onError: (error: any) => {
-        const errorMsg = error.message || '';
-        let displayMsg = '';
-        
-        if (errorMsg.includes('PENDING_TRANSFER_EXISTS')) {
-          displayMsg = t('pendingTransferExists');
-        } else if (errorMsg.includes('ONLY_PENDING_REQUESTS_CAN_BE_DELETED')) {
-          displayMsg = t('onlyPendingRequestsCanBeDeleted');
-        } else if (errorMsg.startsWith('RequestTransfer not found')) {
-          displayMsg = t('requestTransferNotFound');
-        } else {
-          const translated = t(errorMsg);
-          displayMsg = translated === errorMsg ? t('unexpectedError') : translated;
-        }
-        
         toast({
           title: t('error'),
-          description: displayMsg,
+          description: getTransferErrorMessage(error.message, t),
           variant: 'destructive'
         });
       }

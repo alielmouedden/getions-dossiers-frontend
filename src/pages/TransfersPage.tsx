@@ -30,6 +30,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Transfer, TransferStatus } from '@/types';
+import { getTransferErrorMessage } from '@/lib/utils';
 
 const TransfersPage = () => {
   const { t } = useTranslation();
@@ -52,20 +53,7 @@ const TransfersPage = () => {
   const [form, setForm] = useState({ fromUser: loggedInName, toUser: '', fileId: '', status: 'PENDING' as TransferStatus, purpose: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const getErrorMessage = (errorMsg: string) => {
-    if (!errorMsg) return t('unexpectedError');
-    if (errorMsg.includes('PENDING_TRANSFER_EXISTS')) {
-      return t('pendingTransferExists');
-    }
-    if (errorMsg.includes('ONLY_PENDING_REQUESTS_CAN_BE_DELETED')) {
-      return t('onlyPendingRequestsCanBeDeleted');
-    }
-    if (errorMsg.startsWith('RequestTransfer not found')) {
-      return t('requestTransferNotFound');
-    }
-    const translated = t(errorMsg);
-    return translated === errorMsg ? t('unexpectedError') : translated;
-  };
+  const getErrorMessage = (errorMsg: string) => getTransferErrorMessage(errorMsg, t);
 
   const transfers = useMemo(() => {
     return rawRequests.map((req: any) => ({

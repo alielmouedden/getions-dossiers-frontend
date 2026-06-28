@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api';
 import { Label } from '@/components/ui/label';
+import { getTransferErrorMessage } from '@/lib/utils';
 
 const MyTransfersPage = () => {
   const { t } = useTranslation();
@@ -94,12 +95,7 @@ const MyTransfersPage = () => {
   const handleTabChange = (val: string) => { setTab(val as 'sent' | 'received'); setPage(1); setSearch(''); setStatusFilter('all'); };
 
   const getErrorMessage = (error: any): string => {
-    const errorMsg = error?.message || '';
-    if (errorMsg.startsWith('RequestTransfer not found')) {
-      return t('requestTransferNotFound');
-    }
-    const translated = t(errorMsg);
-    return translated === errorMsg ? t('unexpectedError') : translated;
+    return getTransferErrorMessage(error?.message, t);
   };
 
   const handleDecision = (status: 'ACCEPTED' | 'REJECTED') => {
