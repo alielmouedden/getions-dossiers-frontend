@@ -130,11 +130,11 @@ export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
               </div>
 
               {open && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                <div className="flex-1 min-w-0 space-y-1">
+                  <p className="text-sm font-semibold text-foreground truncate leading-none">
                     {user.firstName} {user.lastName}
                   </p>
-                  <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-semibold mt-0.5 tracking-wide">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary border border-primary/20 px-2 py-0.5 text-[10px] font-semibold tracking-wide">
                     {user.role ? t(user.role) : ''}
                   </span>
                 </div>
