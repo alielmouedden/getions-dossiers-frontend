@@ -24,9 +24,8 @@ const TransferHistoryPage = () => {
 
   const mappedHistories = useMemo(() => {
     return (histories as any[]).map((h: any) => {
-      const req = h.requestTransfer || {};
-      const folder = req.folder || {};
-      const createdBy = req.createdBy ? `${req.createdBy.firstName} ${req.createdBy.lastName}` : 'N/A';
+      const folder = h.folder || {};
+      const createdBy = h.createdBy ? `${h.createdBy.firstName} ${h.createdBy.lastName}` : 'N/A';
       const handledBy = h.handledBy ? `${h.handledBy.firstName} ${h.handledBy.lastName}` : 'N/A';
       const folderLabel = folder.folderNumber 
         ? `${folder.folderNumber}/${folder.folderSymbol || ''}/${folder.folderYear || ''}` 
@@ -39,7 +38,7 @@ const TransferHistoryPage = () => {
         toUser: handledBy,
         status: h.status || 'PENDING',
         date: h.requestDate || '',
-        purpose: req.purpose || '',
+        purpose: h.purpose || '',
       };
     });
   }, [histories]);
