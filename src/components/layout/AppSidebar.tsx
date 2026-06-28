@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, ClipboardList, Send, ScrollText, History, X } from 'lucide-react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, ClipboardList, Send, ScrollText, History, LogOut, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -24,7 +24,8 @@ const menuItems = [
 export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
   const { t } = useTranslation();
   const location = useLocation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   
   const roles = user?.roles?.map(r => r.replace('ROLE_', '').toLowerCase()) || 
                 (user?.role ? [user.role.toLowerCase()] : []);
@@ -39,6 +40,13 @@ export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
   const visibleItems = menuItems.filter(item => 
     item.roles.some(r => userRolesMapped.includes(r.toLowerCase()))
   );
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const initialLetters = (user?.firstName?.[0] || '') + (user?.lastName?.[0] || '');
 
   return (
     <>
@@ -105,6 +113,48 @@ export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
             );
           })}
         </nav>
+
+        {/* User profile card at bottom */}
+        {user && (
+          <div className="border-t border-border/60 p-3 shrink-0 bg-card">
+            <div
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-accent/60 cursor-pointer group",
+                !open && "justify-center px-0"
+              )}
+              onClick={() => navigate('/profile')}
+            >
+              {/* Avatar */}
+              <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center shrink-0 shadow-sm ring-2 ring-primary/20 transition-transform group-hover:scale-105">
+                {initialLetters.toUpperCase() || 'U'}
+              </div>
+
+              {open && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-semibold mt-0.5 tracking-wide">
+                    {user.role ? t(user.role) : ''}
+                  </span>
+                </div>
+              )}
+
+              {open && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleLogout();
+                  }}
+                  className="text-muted-foreground/60 hover:text-destructive p-1.5 rounded-lg hover:bg-destructive/10 transition-all shrink-0 opacity-0 group-hover:opacity-100"
+                  title={t('logout')}
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </aside>
     </>
   );
