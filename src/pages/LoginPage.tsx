@@ -122,7 +122,6 @@ const LoginPage = () => {
             <img src="/logo.svg" alt="Justice Hub Logo" className="h-32 w-auto object-contain" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold text-foreground">{t('ministryTitle')}</h2>
             <p className="text-muted-foreground mt-2 text-lg">{t('platformTitle')}</p>
           </div>
           <div className="flex gap-3 justify-center">

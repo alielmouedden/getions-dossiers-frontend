@@ -233,6 +233,11 @@ export const apiClient = {
     if (!res.ok) throw new Error('Failed to fetch my request transfers');
     return res.json();
   },
+  getSentToMeRequestTransfers: async () => {
+    const res = await fetchWithAuth(`${API_BASE_URL}/request-transfers/sent-to-me`);
+    if (!res.ok) throw new Error('Failed to fetch received request transfers');
+    return res.json();
+  },
   addRequestTransfer: async (request: any) => {
     const res = await fetchWithAuth(`${API_BASE_URL}/request-transfers`, {
       method: 'POST',
@@ -247,6 +252,12 @@ export const apiClient = {
     });
     if (!res.ok) throw new Error('Failed to confirm request transfer');
     return res.json();
+  },
+  deleteRequestTransfer: async (id: number) => {
+    const res = await fetchWithAuth(`${API_BASE_URL}/request-transfers/${id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to delete request transfer');
   },
 
   // Logs

@@ -197,5 +197,14 @@
   "requestsByStatus": "طلبات الإحالة حسب الحالة",
   "ACCEPTED": "مقبول",
   "REJECTED": "مرفوض",
-  "PENDING": "قيد الانتظار"
+  "PENDING": "قيد الانتظار",
+  "unexpectedError": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+  "decision": "قرار",
+  "accept": "قبول",
+  "reject": "رفض",
+  "decisionModalTitle": "اتخاذ قرار",
+  "decisionModalDesc": "يرجى قبول أو رفض طلب إحالة هذا الملف.",
+  "decisionSuccess": "تم تسجيل القرار بنجاح",
+  "PENDING_TRANSFER_EXISTS": "هناك طلب إحالة قيد الانتظار بالفعل لهذا الملف.",
+  "ONLY_PENDING_REQUESTS_CAN_BE_DELETED": "يمكن فقط حذف طلبات الإحالة قيد الانتظار."
 }

@@ -38,5 +38,6 @@ export interface Transfer {
     folderNumber: string;
     statuts: string;
     createdAt?: string;
+    folderYear?: number;
   };
 }

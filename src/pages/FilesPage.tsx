@@ -84,23 +84,27 @@ const FilesPage = () => {
       base = base.filter(f => f.statuts === statusFilter);
     }
 
-    if (!search) return base;
-    const q = search.toLowerCase();
-    return base.filter(f => {
-      const folderNumber = f.folderNumber || '';
-      const folderSymbol = f.folderSymbol || '';
-      const year = f.folderYear ? String(f.folderYear) : '';
-      const fullIdentifier = `${folderNumber}/${folderSymbol}/${year}`.toLowerCase();
-      const createdBy = f.createdBy || '';
-      
-      return (
-        folderNumber.toLowerCase().includes(q) ||
-        folderSymbol.toLowerCase().includes(q) ||
-        year.toLowerCase().includes(q) ||
-        fullIdentifier.includes(q) ||
-        createdBy.toLowerCase().includes(q)
-      );
-    });
+    let result = base;
+    if (search) {
+      const q = search.toLowerCase();
+      result = base.filter(f => {
+        const folderNumber = f.folderNumber || '';
+        const folderSymbol = f.folderSymbol || '';
+        const year = f.folderYear ? String(f.folderYear) : '';
+        const fullIdentifier = `${folderNumber}/${folderSymbol}/${year}`.toLowerCase();
+        const createdBy = f.createdBy || '';
+        
+        return (
+          folderNumber.toLowerCase().includes(q) ||
+          folderSymbol.toLowerCase().includes(q) ||
+          year.toLowerCase().includes(q) ||
+          fullIdentifier.includes(q) ||
+          createdBy.toLowerCase().includes(q)
+        );
+      });
+    }
+
+    return [...result].sort((a, b) => Number(b.id) - Number(a.id));
   }, [allFiles, search, statusFilter, isAdmin, isSessionClerk, transfers, userName]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -141,9 +145,15 @@ const FilesPage = () => {
       },
       onError: (error: any) => {
         const errorMsg = error.message || '';
-        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
-          ? t('requestTransferNotFound')
-          : t(errorMsg);
+        let displayMsg = '';
+        
+        if (errorMsg.startsWith('RequestTransfer not found')) {
+          displayMsg = t('requestTransferNotFound');
+        } else {
+          const translated = t(errorMsg);
+          displayMsg = translated === errorMsg ? t('unexpectedError') : translated;
+        }
+        
         toast({
           title: t('error'),
           description: displayMsg,
@@ -199,9 +209,15 @@ const FilesPage = () => {
       },
       onError: (error: any) => {
         const errorMsg = error.message || '';
-        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
-          ? t('requestTransferNotFound')
-          : t(errorMsg);
+        let displayMsg = '';
+        
+        if (errorMsg.startsWith('RequestTransfer not found')) {
+          displayMsg = t('requestTransferNotFound');
+        } else {
+          const translated = t(errorMsg);
+          displayMsg = translated === errorMsg ? t('unexpectedError') : translated;
+        }
+        
         toast({
           title: t('error'),
           description: displayMsg,
@@ -226,9 +242,15 @@ const FilesPage = () => {
       },
       onError: (error: any) => {
         const errorMsg = error.message || '';
-        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
-          ? t('requestTransferNotFound')
-          : t(errorMsg);
+        let displayMsg = '';
+        
+        if (errorMsg.startsWith('RequestTransfer not found')) {
+          displayMsg = t('requestTransferNotFound');
+        } else {
+          const translated = t(errorMsg);
+          displayMsg = translated === errorMsg ? t('unexpectedError') : translated;
+        }
+        
         toast({
           title: t('error'),
           description: displayMsg,

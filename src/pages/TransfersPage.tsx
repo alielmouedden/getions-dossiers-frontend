@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportToCSV, exportToPDF } from '@/lib/export';
 import { transferSchema, validateForm } from '@/lib/validation';
@@ -23,29 +23,66 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useTransfers, useUsers, useFiles } from '@/hooks/use-api';
+import { useRequestTransfers, useUsers, useFiles } from '@/hooks/use-api';
 import { useAuth } from '@/contexts/AuthContext';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Transfer, TransferStatus } from '@/types';
 
 const TransfersPage = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { transfers, isLoading, addTransfer, updateTransfer, deleteTransfer } = useTransfers('all');
+  const { user } = useAuth();
+  const { requests: rawRequests, isLoading, addRequestTransfer, deleteRequestTransfer } = useRequestTransfers('all');
   const { users } = useUsers();
   const { files } = useFiles();
   
   const [open, setOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
+  const [selectedTransfer, setSelectedTransfer] = useState<any | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [form, setForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'PENDING' as TransferStatus });
-  const [editForm, setEditForm] = useState({ fromUser: '', toUser: '', fileId: '', status: 'PENDING' as TransferStatus });
+  
+  const loggedInName = user ? `${user.firstName} ${user.lastName}` : '';
+  const [form, setForm] = useState({ fromUser: loggedInName, toUser: '', fileId: '', status: 'PENDING' as TransferStatus });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+
+  const getErrorMessage = (errorMsg: string) => {
+    if (!errorMsg) return t('unexpectedError');
+    if (errorMsg.includes('PENDING_TRANSFER_EXISTS')) {
+      return t('pendingTransferExists');
+    }
+    if (errorMsg.includes('ONLY_PENDING_REQUESTS_CAN_BE_DELETED')) {
+      return t('onlyPendingRequestsCanBeDeleted');
+    }
+    if (errorMsg.startsWith('RequestTransfer not found')) {
+      return t('requestTransferNotFound');
+    }
+    const translated = t(errorMsg);
+    return translated === errorMsg ? t('unexpectedError') : translated;
+  };
+
+  const transfers = useMemo(() => {
+    return rawRequests.map((req: any) => ({
+      id: String(req.requestTransferId),
+      fromUser: req.createdBy ? `${req.createdBy.firstName} ${req.createdBy.lastName}` : '',
+      toUser: req.handledBy ? `${req.handledBy.firstName} ${req.handledBy.lastName}` : '',
+      fileId: req.folder ? req.folder.folderNumber : '',
+      status: req.status || 'PENDING',
+      date: req.requestDate || '',
+      folder: req.folder ? {
+        folderId: req.folder.folderId,
+        folderSymbol: req.folder.folderSymbol,
+        folderNumber: req.folder.folderNumber,
+        statuts: req.folder.statuts,
+        folderYear: req.folder.folderYear,
+      } : undefined,
+    }));
+  }, [rawRequests]);
 
   const filtered = useMemo(() => {
     let result = transfers;
@@ -60,7 +97,7 @@ const TransfersPage = () => {
         if (tr.folder) {
           const fn = tr.folder.folderNumber || '';
           const fs = tr.folder.folderSymbol || '';
-          const year = tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : '';
+          const year = tr.folder.folderYear ? String(tr.folder.folderYear) : '';
           folderIdentifier = `${fn}/${fs}/${year}`;
         }
         
@@ -73,9 +110,9 @@ const TransfersPage = () => {
       });
     }
     if (statusFilter !== 'all') {
-      result = result.filter(tr => tr.status === statusFilter.toLowerCase());
+      result = result.filter(tr => tr.status.toLowerCase() === statusFilter.toLowerCase());
     }
-    return result;
+    return [...result].sort((a, b) => Number(b.id) - Number(a.id));
   }, [transfers, search, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -89,93 +126,50 @@ const TransfersPage = () => {
     if (!success) { setErrors(validationErrors); return; }
     
     const folder = files.find(f => f.folderNumber === form.fileId);
-    const fromUser = users.find(u => `${u.firstName} ${u.lastName}` === form.fromUser);
     const toUser = users.find(u => `${u.firstName} ${u.lastName}` === form.toUser);
 
-    const transferData = {
-      folder: folder ? { folderId: Number(folder.id) } : null,
-      fromUser: fromUser ? { userId: Number(fromUser.id) } : null,
-      toUser: toUser ? { userId: Number(toUser.id) } : null,
-      purpose: 'Transfer Request',
-      transferDate: new Date().toISOString().split('T')[0],
-      requestTransfer: true
+    if (!folder) {
+      setErrors({ fileId: t('folderNotFound') });
+      return;
+    }
+    if (!toUser) {
+      setErrors({ toUser: t('userNotFound') });
+      return;
+    }
+
+    const requestData = {
+      folderId: Number(folder.id),
+      handledById: Number(toUser.id),
+      purpose: 'Admin Transfer',
+      requestDate: new Date().toISOString().split('T')[0],
     };
 
-    addTransfer(transferData, {
+    addRequestTransfer(requestData, {
       onSuccess: () => {
         setOpen(false);
-        setForm({ fromUser: '', toUser: '', fileId: '', status: 'PENDING' });
+        setForm({ fromUser: loggedInName, toUser: '', fileId: '', status: 'PENDING' });
         setErrors({});
         toast({ title: t('transferAdded') });
       },
       onError: (error: any) => {
         const errorMsg = error.message || '';
-        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
-          ? t('requestTransferNotFound')
-          : t(errorMsg);
         toast({
           title: t('error'),
-          description: displayMsg,
+          description: getErrorMessage(errorMsg),
           variant: 'destructive'
         });
       }
     });
   };
 
-  const handleEdit = (transfer: Transfer) => {
-    setSelectedTransfer(transfer);
-    setEditForm({ fromUser: transfer.fromUser, toUser: transfer.toUser, fileId: transfer.fileId, status: transfer.status as TransferStatus });
-    setEditErrors({});
-    setEditOpen(true);
-  };
-
-  const handleEditSave = () => {
-    if (!selectedTransfer) return;
-    const { success, errors: validationErrors } = validateForm(transferSchema, editForm, t);
-    if (!success) { setEditErrors(validationErrors); return; }
-    
-    const folder = files.find(f => f.folderNumber === editForm.fileId);
-    const fromUser = users.find(u => `${u.firstName} ${u.lastName}` === editForm.fromUser);
-    const toUser = users.find(u => `${u.firstName} ${u.lastName}` === editForm.toUser);
-
-    const transferData = {
-      folder: folder ? { folderId: Number(folder.id) } : null,
-      fromUser: fromUser ? { userId: Number(fromUser.id) } : null,
-      toUser: toUser ? { userId: Number(toUser.id) } : null,
-      purpose: 'Transfer Update',
-      transferDate: new Date().toISOString().split('T')[0],
-      status: editForm.status
-    };
-
-    updateTransfer({ id: selectedTransfer.id, transfer: transferData }, {
-      onSuccess: () => {
-        setEditOpen(false);
-        setSelectedTransfer(null);
-        setEditErrors({});
-        toast({ title: t('transferUpdated') });
-      },
-      onError: (error: any) => {
-        const errorMsg = error.message || '';
-        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
-          ? t('requestTransferNotFound')
-          : t(errorMsg);
-        toast({
-          title: t('error'),
-          description: displayMsg,
-          variant: 'destructive'
-        });
-      }
-    });
-  };
-
-  const handleDeleteClick = (transfer: Transfer) => {
+  const handleDeleteClick = (transfer: any) => {
     setSelectedTransfer(transfer);
     setDeleteOpen(true);
   };
 
   const handleDeleteConfirm = () => {
     if (!selectedTransfer) return;
-    deleteTransfer(selectedTransfer.id, {
+    deleteRequestTransfer(Number(selectedTransfer.id), {
       onSuccess: () => {
         setDeleteOpen(false);
         setSelectedTransfer(null);
@@ -183,30 +177,27 @@ const TransfersPage = () => {
       },
       onError: (error: any) => {
         const errorMsg = error.message || '';
-        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
-          ? t('requestTransferNotFound')
-          : t(errorMsg);
         toast({
           title: t('error'),
-          description: displayMsg,
+          description: getErrorMessage(errorMsg),
           variant: 'destructive'
         });
       }
     });
   };
 
-  const { user } = useAuth();
   const isAdmin = user?.role === 'MANAGER' || (user?.roles && (user.roles.includes('ROLE_MANAGER') || user.roles.includes('MANAGER')));
 
   const statusBadge = (status: string) => {
     const s = status.toLowerCase();
     const styles: Record<string, string> = {
       completed: 'bg-success/10 text-success border-success/20',
+      accepted: 'bg-success/10 text-success border-success/20',
       pending: 'bg-warning/10 text-warning border-warning/20',
       received: 'bg-info/10 text-info border-info/20',
       rejected: 'bg-destructive/10 text-destructive border-destructive/20',
     };
-    return <Badge variant="outline" className={styles[s] || ''}>{t(s)}</Badge>;
+    return <Badge variant="outline" className={styles[s] || ''}>{t(status.toUpperCase())}</Badge>;
   };
 
   const FieldError = ({ error }: { error?: string }) => error ? <p className="text-xs text-destructive mt-1">{error}</p> : null;
@@ -255,7 +246,7 @@ const TransfersPage = () => {
                 const translatedData = filtered.map(tr => ({
                   ...tr,
                   statusTrans: t(tr.status.toLowerCase()),
-                  fileId: tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : ''}` : tr.fileId
+                  fileId: tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.folderYear ? String(tr.folder.folderYear) : ''}` : tr.fileId
                 }));
                 exportToCSV(translatedData as unknown as Record<string, string>[], headers, 'transfers');
               }}>
@@ -270,7 +261,7 @@ const TransfersPage = () => {
                 const translatedData = filtered.map(tr => ({
                   ...tr,
                   statusTrans: t(tr.status.toLowerCase()),
-                  fileId: tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : ''}` : tr.fileId
+                  fileId: tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.folderYear ? String(tr.folder.folderYear) : ''}` : tr.fileId
                 }));
                 await exportToPDF(translatedData as unknown as Record<string, string>[], headers, 'transfers', t('transferManagement'));
               }}>
@@ -288,20 +279,61 @@ const TransfersPage = () => {
                 <DialogDescription className="sr-only">{t('addTransfer')}</DialogDescription>
               </DialogHeader>
               <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label>{t('selectFile')}</Label>
-                  <Select value={form.fileId} onValueChange={(v) => setForm({ ...form, fileId: v })}>
-                    <SelectTrigger className={errors.fileId ? 'border-destructive' : ''}><SelectValue placeholder={t('selectFile')} /></SelectTrigger>
-                    <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{`${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`}</SelectItem>))}</SelectContent>
-                  </Select>
-                  <FieldError error={errors.fileId} />
-                </div>
+                 <div className="space-y-1 flex flex-col">
+                   <Label>{t('selectFile')}</Label>
+                   <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                     <PopoverTrigger asChild>
+                       <Button
+                         variant="outline"
+                         role="combobox"
+                         aria-expanded={popoverOpen}
+                         className={`w-full justify-between font-normal text-start ${errors.fileId ? 'border-destructive' : ''}`}
+                       >
+                         {form.fileId
+                           ? files.find((f) => f.folderNumber === form.fileId)
+                             ? `${files.find((f) => f.folderNumber === form.fileId)?.folderNumber}/${files.find((f) => f.folderNumber === form.fileId)?.folderSymbol}/${files.find((f) => f.folderNumber === form.fileId)?.folderYear || ''}`
+                             : t('selectFile')
+                           : t('selectFile')}
+                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                       </Button>
+                     </PopoverTrigger>
+                      <PopoverPrimitive.Content
+                        className="z-50 w-[var(--radix-popover-trigger-width)] rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
+                        align="start"
+                      >
+                        <Command>
+                          <CommandInput placeholder={t('search')} />
+                          <CommandList>
+                            <CommandEmpty>{t('noData')}</CommandEmpty>
+                            <CommandGroup>
+                              {files.map((f) => {
+                                const label = `${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`;
+                                return (
+                                  <CommandItem
+                                    key={f.id}
+                                    value={label}
+                                    onSelect={() => {
+                                      setForm({ ...form, fileId: f.folderNumber });
+                                      setPopoverOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${form.fileId === f.folderNumber ? 'opacity-100' : 'opacity-0'}`}
+                                    />
+                                    {label}
+                                  </CommandItem>
+                                );
+                              })}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverPrimitive.Content>
+                   </Popover>
+                   <FieldError error={errors.fileId} />
+                 </div>
                 <div className="space-y-1">
                   <Label>{t('fromUser')}</Label>
-                  <Select value={form.fromUser} onValueChange={(v) => setForm({ ...form, fromUser: v })}>
-                    <SelectTrigger className={errors.fromUser ? 'border-destructive' : ''}><SelectValue placeholder={t('selectUser')} /></SelectTrigger>
-                    <SelectContent>{users.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
-                  </Select>
+                  <Input value={form.fromUser} disabled className="bg-muted text-muted-foreground" />
                   <FieldError error={errors.fromUser} />
                 </div>
                 <div className="space-y-1">
@@ -314,14 +346,7 @@ const TransfersPage = () => {
                 </div>
                 <div className="space-y-1">
                   <Label>{t('status')}</Label>
-                  <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as TransferStatus })}>
-                    <SelectTrigger className={errors.status ? 'border-destructive' : ''}><SelectValue placeholder={t('selectStatus')} /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PENDING">{t('pending')}</SelectItem>
-                      <SelectItem value="RECEIVED">{t('received')}</SelectItem>
-                      <SelectItem value="COMPLETED">{t('completed')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input value={t('pending')} disabled className="bg-muted text-muted-foreground" />
                   <FieldError error={errors.status} />
                 </div>
                 <div className="flex gap-2 pt-2">
@@ -333,58 +358,6 @@ const TransfersPage = () => {
           </Dialog>
         </div>
       </div>
-
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditErrors({}); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('editTransfer')}</DialogTitle>
-            <DialogDescription className="sr-only">{t('editTransfer')}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label>{t('selectFile')}</Label>
-              <Select value={editForm.fileId} onValueChange={(v) => setEditForm({ ...editForm, fileId: v })}>
-                <SelectTrigger className={editErrors.fileId ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>{files.map((f) => (<SelectItem key={f.id} value={f.folderNumber}>{`${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`}</SelectItem>))}</SelectContent>
-              </Select>
-              <FieldError error={editErrors.fileId} />
-            </div>
-            <div className="space-y-1">
-              <Label>{t('fromUser')}</Label>
-              <Select value={editForm.fromUser} onValueChange={(v) => setEditForm({ ...editForm, fromUser: v })}>
-                <SelectTrigger className={editErrors.fromUser ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>{users.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
-              </Select>
-              <FieldError error={editErrors.fromUser} />
-            </div>
-            <div className="space-y-1">
-              <Label>{t('toUser')}</Label>
-              <Select value={editForm.toUser} onValueChange={(v) => setEditForm({ ...editForm, toUser: v })}>
-                <SelectTrigger className={editErrors.toUser ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>{users.map((u) => (<SelectItem key={u.id} value={`${u.firstName} ${u.lastName}`}>{u.firstName} {u.lastName}</SelectItem>))}</SelectContent>
-              </Select>
-              <FieldError error={editErrors.toUser} />
-            </div>
-            <div className="space-y-1">
-              <Label>{t('status')}</Label>
-              <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v as TransferStatus })}>
-                <SelectTrigger className={editErrors.status ? 'border-destructive' : ''}><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PENDING">{t('pending')}</SelectItem>
-                  <SelectItem value="RECEIVED">{t('received')}</SelectItem>
-                  <SelectItem value="COMPLETED">{t('completed')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <FieldError error={editErrors.status} />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button onClick={handleEditSave} className="flex-1">{t('save')}</Button>
-              <Button variant="outline" onClick={() => setEditOpen(false)} className="flex-1">{t('cancel')}</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -410,9 +383,9 @@ const TransfersPage = () => {
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder={t('filterByStatus')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('allStatuses')}</SelectItem>
-            <SelectItem value="pending">{t('pending')}</SelectItem>
-            <SelectItem value="received">{t('received')}</SelectItem>
-            <SelectItem value="completed">{t('completed')}</SelectItem>
+            <SelectItem value="pending">{t('PENDING')}</SelectItem>
+            <SelectItem value="accepted">{t('ACCEPTED')}</SelectItem>
+            <SelectItem value="rejected">{t('REJECTED')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -439,12 +412,11 @@ const TransfersPage = () => {
                   <TableCell className="font-medium">#{tr.id}</TableCell>
                   <TableCell>{tr.fromUser}</TableCell>
                   <TableCell>{tr.toUser}</TableCell>
-                  <TableCell>{tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.createdAt ? tr.folder.createdAt.substring(0, 4) : ''}` : tr.fileId}</TableCell>
+                  <TableCell>{tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.folderYear ? String(tr.folder.folderYear) : ''}` : tr.fileId}</TableCell>
                   <TableCell>{statusBadge(tr.status)}</TableCell>
                   <TableCell>{tr.date}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(tr)}><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteClick(tr)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </TableCell>

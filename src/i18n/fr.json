@@ -197,5 +197,14 @@
   "requestsByStatus": "Demandes de transfert par statut",
   "ACCEPTED": "Accepté",
   "REJECTED": "Refusé",
-  "PENDING": "En attente"
+  "PENDING": "En attente",
+  "unexpectedError": "Une erreur inattendue est survenue. Veuillez réessayer.",
+  "decision": "Décision",
+  "accept": "Accepter",
+  "reject": "Refuser",
+  "decisionModalTitle": "Prendre une décision",
+  "decisionModalDesc": "Veuillez accepter ou refuser cette demande de transfert de dossier.",
+  "decisionSuccess": "Décision enregistrée avec succès",
+  "PENDING_TRANSFER_EXISTS": "Une demande de transfert en attente existe déjà pour ce dossier.",
+  "ONLY_PENDING_REQUESTS_CAN_BE_DELETED": "Seules les demandes en attente peuvent être supprimées."
 }

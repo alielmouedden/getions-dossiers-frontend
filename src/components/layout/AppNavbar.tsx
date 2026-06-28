@@ -44,18 +44,21 @@ export const AppNavbar = ({
   const navigate = useNavigate();
 
   const notifications = rawNotifications
-    .filter(n => (n.toUser === `${user?.firstName} ${user?.lastName}` || n.fromUser === `${user?.firstName} ${user?.lastName}`))
-    .filter(n => !clearedIds.includes(n.id))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .filter(n => n.status === 'PENDING')
+    .filter(n => !clearedIds.includes(String(n.requestTransferId)))
+    .sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime())
     .slice(0, 5)
     .map(n => {
-      const isRecipient = n.toUser === `${user?.firstName} ${user?.lastName}`;
+      const folderNumber = n.folder 
+        ? `${n.folder.folderNumber}/${n.folder.folderSymbol}/${n.folder.folderYear || ''}`
+        : '';
+      const senderName = n.createdBy ? `${n.createdBy.firstName} ${n.createdBy.lastName}` : '';
       return {
-        id: n.id,
-        type: isRecipient ? 'transfer' : 'received',
-        message: isRecipient ? t('fileTransferredToYou') : t('transferReceived'),
-        time: n.date,
-        folderNumber: n.fileId,
+        id: String(n.requestTransferId),
+        type: 'received',
+        message: `${t('transferReceived')} ${senderName ? `(${senderName})` : ''}`,
+        time: n.requestDate,
+        folderNumber: folderNumber,
       };
     });
 
@@ -69,11 +72,7 @@ export const AppNavbar = ({
   };
 
   const handleNotificationClick = (folderNumber?: string) => {
-    if (folderNumber) {
-      navigate(`/files?search=${folderNumber}`);
-    } else {
-      navigate('/my-transfers', { state: { tab: 'received' } });
-    }
+    navigate('/my-transfers', { state: { tab: 'received' } });
   };
 
   return (

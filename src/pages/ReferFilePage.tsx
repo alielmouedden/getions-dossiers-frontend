@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,8 +10,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useFiles, useUsers, useTransfers } from '@/hooks/use-api';
+import { useFiles, useUsers, useRequestTransfers } from '@/hooks/use-api';
 import { useAuth } from '@/contexts/AuthContext';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 
 const ReferFilePage = () => {
   const { t } = useTranslation();
@@ -20,9 +22,10 @@ const ReferFilePage = () => {
   const { user } = useAuth(); // Logged in user
   const { files, isLoading: filesLoading } = useFiles('available');
   const { users, isLoading: usersLoading } = useUsers();
-  const { addTransfer } = useTransfers();
+  const { addRequestTransfer } = useRequestTransfers();
   
   const [form, setForm] = useState({ fileId: '', toUser: '' });
+  const [open, setOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isLoading = filesLoading || usersLoading;
@@ -39,24 +42,42 @@ const ReferFilePage = () => {
     const folder = files.find(f => f.folderNumber === form.fileId);
     const toUser = users.find(u => `${u.firstName} ${u.lastName}` === form.toUser);
 
-    const transferData = {
-      folder: folder ? { folderId: Number(folder.id) } : null,
-      toUser: toUser ? { userId: Number(toUser.id) } : null,
+    if (!folder) {
+      setErrors({ fileId: t('folderNotFound') });
+      return;
+    }
+    if (!toUser) {
+      setErrors({ toUser: t('userNotFound') });
+      return;
+    }
+
+    const requestData = {
+      folderId: Number(folder.id),
+      handledById: Number(toUser.id),
       purpose: 'File Referral',
-      transferDate: new Date().toISOString().split('T')[0],
-      status: 'PENDING'
+      requestDate: new Date().toISOString().split('T')[0]
     };
 
-    addTransfer(transferData, {
+    addRequestTransfer(requestData, {
       onSuccess: () => {
         toast({ title: t('transferAdded') });
         navigate('/my-transfers');
       },
       onError: (error: any) => {
         const errorMsg = error.message || '';
-        const displayMsg = errorMsg.startsWith('RequestTransfer not found')
-          ? t('requestTransferNotFound')
-          : t(errorMsg);
+        let displayMsg = '';
+        
+        if (errorMsg.includes('PENDING_TRANSFER_EXISTS')) {
+          displayMsg = t('pendingTransferExists');
+        } else if (errorMsg.includes('ONLY_PENDING_REQUESTS_CAN_BE_DELETED')) {
+          displayMsg = t('onlyPendingRequestsCanBeDeleted');
+        } else if (errorMsg.startsWith('RequestTransfer not found')) {
+          displayMsg = t('requestTransferNotFound');
+        } else {
+          const translated = t(errorMsg);
+          displayMsg = translated === errorMsg ? t('unexpectedError') : translated;
+        }
+        
         toast({
           title: t('error'),
           description: displayMsg,
@@ -79,20 +100,53 @@ const ReferFilePage = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Select File */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 flex flex-col">
             <Label>{t('selectFile')}</Label>
-            <Select value={form.fileId} onValueChange={(v) => setForm({ ...form, fileId: v })}>
-              <SelectTrigger className={errors.fileId ? 'border-destructive' : ''}>
-                <SelectValue placeholder={t('selectOption')} />
-              </SelectTrigger>
-              <SelectContent>
-                {files.map((f) => (
-                  <SelectItem key={f.id} value={f.folderNumber}>
-                    {`${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className={`w-full justify-between font-normal text-start ${errors.fileId ? 'border-destructive' : ''}`}
+                >
+                  {form.fileId
+                    ? files.find((f) => f.folderNumber === form.fileId)
+                      ? `${files.find((f) => f.folderNumber === form.fileId)?.folderNumber}/${files.find((f) => f.folderNumber === form.fileId)?.folderSymbol}/${files.find((f) => f.folderNumber === form.fileId)?.folderYear || ''}`
+                      : t('selectOption')
+                    : t('selectOption')}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder={t('search')} />
+                  <CommandList>
+                    <CommandEmpty>{t('noData')}</CommandEmpty>
+                    <CommandGroup>
+                      {files.map((f) => {
+                        const label = `${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`;
+                        return (
+                          <CommandItem
+                            key={f.id}
+                            value={label}
+                            onSelect={() => {
+                              setForm({ ...form, fileId: f.folderNumber });
+                              setOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${form.fileId === f.folderNumber ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                            {label}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             <FieldError error={errors.fileId} />
           </div>
 

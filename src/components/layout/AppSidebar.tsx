@@ -58,20 +58,22 @@ export const AppSidebar = ({ open, onToggle, isRtl }: AppSidebarProps) => {
         )}
       >
         {/* Logo area */}
-        <div className="h-16 flex items-center gap-3 px-4 border-b border-border shrink-0">
+        <div className="h-16 flex items-center justify-center relative px-4 border-b border-border shrink-0">
           <img 
             src="/logo.svg" 
             alt="Justice Hub Logo" 
             className={cn(
-              "shrink-0 object-contain transition-all duration-300",
+              "shrink-0 object-contain transition-all duration-300 mx-auto",
               open ? "h-11 w-auto" : "h-9 w-9"
             )} 
           />
-          <div className={cn("overflow-hidden transition-all", open ? "w-auto opacity-100" : "w-0 opacity-0")}>
-            <p className="text-sm font-semibold text-foreground whitespace-nowrap">{t('ministryTitle')}</p>
-            <p className="text-xs text-muted-foreground whitespace-nowrap">{t('platformTitle')}</p>
-          </div>
-          <button onClick={onToggle} className="md:hidden ms-auto text-muted-foreground hover:text-foreground">
+          <button 
+            onClick={onToggle} 
+            className={cn(
+              "md:hidden absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground",
+              isRtl ? "left-4" : "right-4"
+            )}
+          >
             <X className="w-5 h-5" />
           </button>
         </div>

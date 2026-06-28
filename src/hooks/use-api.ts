@@ -86,6 +86,7 @@ export const useTransfers = (mode: 'all' | 'me' = 'all') => {
   const transfersQuery = useQuery({
     queryKey: ['transfers', mode],
     queryFn: () => mode === 'me' ? apiClient.getMyTransfers() : apiClient.getTransfers(),
+    refetchInterval: 3000,
   });
 
   const addTransferMutation = useMutation({
@@ -122,7 +123,8 @@ export const useTransfers = (mode: 'all' | 'me' = 'all') => {
 export const useNotifications = () => {
   const notificationsQuery = useQuery({
     queryKey: ['notifications'],
-    queryFn: apiClient.getMyTransfers,
+    queryFn: apiClient.getSentToMeRequestTransfers,
+    refetchInterval: 3000,
   });
 
   return {
@@ -145,12 +147,17 @@ export const useLogs = () => {
   };
 };
 
-export const useRequestTransfers = (mode: 'all' | 'me' = 'all') => {
+export const useRequestTransfers = (mode: 'all' | 'sent' | 'received' = 'all') => {
   const queryClient = useQueryClient();
 
   const requestsQuery = useQuery({
     queryKey: ['request-transfers', mode],
-    queryFn: () => mode === 'all' ? apiClient.getRequestTransfers() : apiClient.getMyRequestTransfers(),
+    queryFn: () => {
+      if (mode === 'sent') return apiClient.getMyRequestTransfers();
+      if (mode === 'received') return apiClient.getSentToMeRequestTransfers();
+      return apiClient.getRequestTransfers();
+    },
+    refetchInterval: 3000,
   });
 
   const confirmMutation = useMutation({
@@ -162,9 +169,27 @@ export const useRequestTransfers = (mode: 'all' | 'me' = 'all') => {
     },
   });
 
+  const addRequestTransferMutation = useMutation({
+    mutationFn: apiClient.addRequestTransfer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['request-transfers'] });
+      queryClient.invalidateQueries({ queryKey: ['files'] });
+    },
+  });
+
+  const deleteRequestTransferMutation = useMutation({
+    mutationFn: apiClient.deleteRequestTransfer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['request-transfers'] });
+      queryClient.invalidateQueries({ queryKey: ['files'] });
+    },
+  });
+
   return {
     requests: requestsQuery.data ?? [],
     isLoading: requestsQuery.isLoading,
     confirm: confirmMutation.mutate,
+    addRequestTransfer: addRequestTransferMutation.mutate,
+    deleteRequestTransfer: deleteRequestTransferMutation.mutate,
   };
 };
