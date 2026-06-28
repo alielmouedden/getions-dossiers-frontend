@@ -193,3 +193,17 @@ export const useRequestTransfers = (mode: 'all' | 'sent' | 'received' = 'all') =
     deleteRequestTransfer: deleteRequestTransferMutation.mutate,
   };
 };
+
+export const useRequestTransferHistories = () => {
+  const historiesQuery = useQuery({
+    queryKey: ['request-transfer-histories'],
+    queryFn: apiClient.getRequestTransferHistories,
+    refetchInterval: 5000,
+  });
+
+  return {
+    histories: historiesQuery.data ?? [],
+    isLoading: historiesQuery.isLoading,
+    error: historiesQuery.error,
+  };
+};

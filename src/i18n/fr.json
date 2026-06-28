@@ -30,6 +30,7 @@
   "userManagement": "Gestion des utilisateurs",
   "fileManagement": "Gestion des dossiers",
   "transferManagement": "Gestion des transferts",
+  "transferHistory": "Historique des transferts",
   "totalUsers": "Total utilisateurs",
   "totalFiles": "Total dossiers",
   "transferRequests": "Demandes de transfert",

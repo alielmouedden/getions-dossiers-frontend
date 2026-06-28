@@ -260,6 +260,12 @@ export const apiClient = {
     if (!res.ok) throw new Error('Failed to delete request transfer');
   },
 
+  getRequestTransferHistories: async () => {
+    const res = await fetchWithAuth(`${API_BASE_URL}/request-transfer-histories`);
+    if (!res.ok) throw new Error('Failed to fetch request transfer histories');
+    return res.json();
+  },
+
   // Logs
   getLogs: async () => {
     const res = await fetchWithAuth(`${API_BASE_URL}/logs`);

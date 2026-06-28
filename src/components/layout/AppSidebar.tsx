@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, ClipboardList, Send, ScrollText, X } from 'lucide-react';
+import { LayoutDashboard, Users, FolderOpen, ArrowRightLeft, ClipboardList, Send, ScrollText, History, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,6 +15,7 @@ const menuItems = [
   { key: 'userManagement', icon: Users, path: '/users', roles: ['admin', 'manager'] },
   { key: 'fileManagement', icon: FolderOpen, path: '/files', roles: ['admin', 'manager', 'clerk'] },
   { key: 'transferManagement', icon: ArrowRightLeft, path: '/transfers', roles: ['admin', 'manager'] },
+  { key: 'transferHistory', icon: History, path: '/transfer-history', roles: ['admin', 'manager'] },
   { key: 'myTransfersLog', icon: ClipboardList, path: '/my-transfers', roles: ['admin', 'manager', 'clerk', 'session_clerk'] },
   { key: 'referFile', icon: Send, path: '/refer-file', roles: ['clerk', 'session_clerk'] },
   { key: 'systemLogs', icon: ScrollText, path: '/system-logs', roles: ['admin', 'manager'] },
