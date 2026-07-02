@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { exportToCSV, exportToPDF } from '@/lib/export';
+import { exportToExcel, exportToPDF } from '@/lib/export';
 import { transferSchema, validateForm } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -234,12 +234,12 @@ const TransfersPage = () => {
                 ];
                 const translatedData = filtered.map(tr => ({
                   ...tr,
-                  statusTrans: t(tr.status.toLowerCase()),
+                  statusTrans: t(tr.status.toUpperCase()),
                   fileId: tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.folderYear ? String(tr.folder.folderYear) : ''}` : tr.fileId
                 }));
-                exportToCSV(translatedData as unknown as Record<string, string>[], headers, 'transfers');
+                exportToExcel(translatedData as unknown as Record<string, string>[], headers, 'transfers');
               }}>
-                <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
+                <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportExcel')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={async () => {
                 const headers = [
@@ -249,10 +249,10 @@ const TransfersPage = () => {
                 ];
                 const translatedData = filtered.map(tr => ({
                   ...tr,
-                  statusTrans: t(tr.status.toLowerCase()),
+                  statusTrans: t(tr.status.toUpperCase()),
                   fileId: tr.folder ? `${tr.folder.folderNumber}/${tr.folder.folderSymbol}/${tr.folder.folderYear ? String(tr.folder.folderYear) : ''}` : tr.fileId
                 }));
-                await exportToPDF(translatedData as unknown as Record<string, string>[], headers, 'transfers', t('transferManagement'));
+                await exportToPDF(translatedData as unknown as Record<string, string>[], headers, 'transfers', t('transferManagement'), { userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : '' });
               }}>
                 <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
               </DropdownMenuItem>

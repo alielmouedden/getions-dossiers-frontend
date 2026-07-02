@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, ChevronLeft, ChevronRight, Download, FileSpreadsheet, FileText, Loader2, Check, X } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { exportToCSV, exportToPDF } from '@/lib/export';
+import { exportToExcel, exportToPDF } from '@/lib/export';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -209,10 +209,10 @@ const MyTransfersPage = () => {
             <Button variant="outline" className="gap-2"><Download className="w-4 h-4" /> {t('export')}</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => exportToCSV(getTranslatedRequests() as unknown as Record<string, string>[], exportHeaders, 'my-requests')}>
-              <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
+            <DropdownMenuItem onClick={() => exportToExcel(getTranslatedRequests() as unknown as Record<string, string>[], exportHeaders, 'my-requests')}>
+              <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportExcel')}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={async () => await exportToPDF(getTranslatedRequests() as unknown as Record<string, string>[], exportHeaders, 'my-requests', t('myTransfersLog'))}>
+            <DropdownMenuItem onClick={async () => await exportToPDF(getTranslatedRequests() as unknown as Record<string, string>[], exportHeaders, 'my-requests', t('myTransfersLog'), { userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : '' })}>
               <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
             </DropdownMenuItem>
           </DropdownMenuContent>

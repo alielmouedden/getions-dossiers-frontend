@@ -116,6 +116,7 @@
   "itemsPerPage": "Par page",
   "export": "Exporter",
   "exportCSV": "Exporter CSV",
+  "exportExcel": "Exporter Excel",
   "exportPDF": "Exporter PDF",
   "required": "Ce champ est requis",
   "invalidEmail": "Adresse email invalide",

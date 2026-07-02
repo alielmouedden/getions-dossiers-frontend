@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { exportToCSV, exportToPDF } from '@/lib/export';
+import { exportToExcel, exportToPDF } from '@/lib/export';
+import { useAuth } from '@/contexts/AuthContext';
 import { userAddSchema, userEditSchema, validateForm } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +31,7 @@ const UsersPage = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { users, isLoading, addUser, updateUser, deleteUser } = useUsers();
+  const { user } = useAuth();
   
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -188,9 +190,9 @@ const UsersPage = () => {
                   ...u,
                   roleTrans: t(u.role)
                 }));
-                exportToCSV(translatedData as unknown as Record<string, string>[], headers, 'users');
+                exportToExcel(translatedData as unknown as Record<string, string>[], headers, 'users');
               }}>
-                <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
+                <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportExcel')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={async () => {
                 const headers = [
@@ -202,7 +204,7 @@ const UsersPage = () => {
                   ...u,
                   roleTrans: t(u.role)
                 }));
-                await exportToPDF(translatedData as unknown as Record<string, string>[], headers, 'users', t('userManagement'));
+                await exportToPDF(translatedData as unknown as Record<string, string>[], headers, 'users', t('userManagement'), { userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : '' });
               }}>
                 <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
               </DropdownMenuItem>

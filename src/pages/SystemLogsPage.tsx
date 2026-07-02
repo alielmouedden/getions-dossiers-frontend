@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, ChevronLeft, ChevronRight, Download, FileSpreadsheet, FileText, LogIn, LogOut, FilePlus, FileEdit, Trash2, Send, UserPlus, UserCog } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { exportToCSV, exportToPDF } from '@/lib/export';
+import { exportToExcel, exportToPDF } from '@/lib/export';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,7 @@ import { useLogs } from '@/hooks/use-api';
 const SystemLogsPage = () => {
   const { t } = useTranslation();
   const { logs, isLoading } = useLogs();
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [page, setPage] = useState(1);
@@ -147,10 +149,10 @@ const SystemLogsPage = () => {
             <Button variant="outline" className="gap-2"><Download className="w-4 h-4" /> {t('export')}</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => exportToCSV(getTranslatedLogs() as unknown as Record<string, string>[], exportHeaders, 'system-logs')}>
-              <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
+            <DropdownMenuItem onClick={() => exportToExcel(getTranslatedLogs() as unknown as Record<string, string>[], exportHeaders, 'system-logs')}>
+              <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportExcel')}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={async () => await exportToPDF(getTranslatedLogs() as unknown as Record<string, string>[], exportHeaders, 'system-logs', t('systemLogs'))}>
+            <DropdownMenuItem onClick={async () => await exportToPDF(getTranslatedLogs() as unknown as Record<string, string>[], exportHeaders, 'system-logs', t('systemLogs'), { userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : '' })}>
               <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
             </DropdownMenuItem>
           </DropdownMenuContent>

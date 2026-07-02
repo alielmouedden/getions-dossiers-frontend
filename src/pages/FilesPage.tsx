@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { exportToCSV, exportToPDF } from '@/lib/export';
+import { exportToExcel, exportToPDF } from '@/lib/export';
 import { fileSchema, validateForm } from '@/lib/validation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -312,28 +312,34 @@ const FilesPage = () => {
               <DropdownMenuItem onClick={() => {
                 const headers = [
                   { key: 'fileIdentifier', label: t('fileIdentifier') },
-                  { key: 'createdBy', label: t('createdBy') }, { key: 'folderYear', label: t('creationYear') },
+                  { key: 'createdBy', label: t('createdBy') },
+                  { key: 'folderYear', label: t('creationYear') },
+                  { key: 'statusTrans', label: t('status') },
                 ];
                 const exportData = filtered.map(f => ({
                   ...f,
                   fileIdentifier: `${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`,
-                  folderYear: f.folderYear || ''
+                  folderYear: f.folderYear || '',
+                  statusTrans: t(f.statuts || '')
                 }));
-                exportToCSV(exportData as unknown as Record<string, string>[], headers, 'files');
+                exportToExcel(exportData as unknown as Record<string, string>[], headers, 'files');
               }}>
-                <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
+                <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportExcel')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={async () => {
                 const headers = [
                   { key: 'fileIdentifier', label: t('fileIdentifier') },
-                  { key: 'createdBy', label: t('createdBy') }, { key: 'folderYear', label: t('creationYear') },
+                  { key: 'createdBy', label: t('createdBy') },
+                  { key: 'folderYear', label: t('creationYear') },
+                  { key: 'statusTrans', label: t('status') },
                 ];
                 const exportData = filtered.map(f => ({
                   ...f,
                   fileIdentifier: `${f.folderNumber}/${f.folderSymbol}/${f.folderYear || ''}`,
-                  folderYear: f.folderYear || ''
+                  folderYear: f.folderYear || '',
+                  statusTrans: t(f.statuts || '')
                 }));
-                await exportToPDF(exportData as unknown as Record<string, string>[], headers, 'files', t('fileManagement'));
+                await exportToPDF(exportData as unknown as Record<string, string>[], headers, 'files', t('fileManagement'), { userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : '' });
               }}>
                 <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
               </DropdownMenuItem>

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, ChevronLeft, ChevronRight, Download, FileSpreadsheet, FileText, Check, X, History } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { exportToCSV, exportToPDF } from '@/lib/export';
+import { exportToExcel, exportToPDF } from '@/lib/export';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -141,10 +141,10 @@ const TransferHistoryPage = () => {
             <Button variant="outline" className="gap-2"><Download className="w-4 h-4" /> {t('export')}</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => exportToCSV(getTranslatedHistories() as unknown as Record<string, string>[], exportHeaders, 'transfer-history')}>
-              <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportCSV')}
+            <DropdownMenuItem onClick={() => exportToExcel(getTranslatedHistories() as unknown as Record<string, string>[], exportHeaders, 'transfer-history')}>
+              <FileSpreadsheet className="w-4 h-4 me-2" /> {t('exportExcel')}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={async () => await exportToPDF(getTranslatedHistories() as unknown as Record<string, string>[], exportHeaders, 'transfer-history', t('transferHistory'))}>
+            <DropdownMenuItem onClick={async () => await exportToPDF(getTranslatedHistories() as unknown as Record<string, string>[], exportHeaders, 'transfer-history', t('transferHistory'), { userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : '' })}>
               <FileText className="w-4 h-4 me-2" /> {t('exportPDF')}
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -116,6 +116,7 @@
   "itemsPerPage": "لكل صفحة",
   "export": "تصدير",
   "exportCSV": "تصدير CSV",
+  "exportExcel": "تصدير Excel",
   "exportPDF": "تصدير PDF",
   "required": "هذا الحقل مطلوب",
   "invalidEmail": "البريد الإلكتروني غير صالح",
